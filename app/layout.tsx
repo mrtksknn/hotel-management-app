@@ -1,42 +1,66 @@
 "use client";
 
-import "./globals.css";
-import { ReactNode } from "react";
-import Link from "next/link";
-import { Providers } from "./providers";
 import { usePathname } from "next/navigation";
+import { Box, Flex, Container } from "@chakra-ui/react";
+import Sidebar from "@/components/Sidebar";
+import { Providers } from "./providers";
 
-interface RootLayoutProps {
-  children: ReactNode;
-}
-
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const showSidebar = pathname !== "/login" && pathname !== "/register";
+  // Login ve Register sayfalarında Sidebar gizli olacak
+  const isAuthPage = pathname === "/login" || pathname === "/register";
 
   return (
     <html lang="tr">
-      <body className="flex min-h-screen bg-gray-100">
+      <body>
         <Providers>
-          {showSidebar && (
-            <aside className="w-64 bg-white shadow-md p-6 flex flex-col">
-              <h2 className="text-xl font-bold mb-6">My App</h2>
-              <nav className="flex flex-col gap-3">
-                <Link href="/dashboard" className="hover:bg-gray-200 p-2 rounded">
-                  Dashboard
-                </Link>
-                <Link href="/profile" className="hover:bg-gray-200 p-2 rounded">
-                  Profile
-                </Link>
-              </nav>
-            </aside>
-          )}
-          <main className={`flex-1 p-6 ${showSidebar ? "" : "w-full"}`}>
-            {children}
-          </main>
-        </Providers>
+          {isAuthPage ? (
+            // 🔹 Login/Register sayfaları: Tam sayfa görünüm
+            <Box minH="100vh" bg="gray.50">
+              {children}
+            </Box>
+          ) : (
+            // 🔹 Diğer sayfalar: Sidebar + Content layout
+            <Flex minH="100vh">
+              {/* Sidebar */}
+              <Box
+                w="225px"
+                bg="#1e2532"
+                color="white"
+                position="fixed"
+                left={0}
+                top={0}
+                bottom={0}
+              >
+                <Sidebar />
+              </Box>
 
+              {/* Content */}
+              <Box
+                ml="225px"
+                flex="1"
+                bg="white"
+                minH="100vh"
+                display="flex"
+                justifyContent="center"
+                alignItems="flex-start"
+                p={8}
+              >
+                <Container
+                  maxW="1080px"
+                  w="100%"
+                  bg="white"
+                  boxShadow="md"
+                  borderRadius="lg"
+                  p={6}
+                >
+                  {children}
+                </Container>
+              </Box>
+            </Flex>
+          )}
+        </Providers>
       </body>
     </html>
   );

@@ -1,27 +1,38 @@
 "use client";
+
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Box, Heading, Text } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
+import { Box, Heading, Text, Button } from "@chakra-ui/react";
 
 export default function DashboardPage() {
-    const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const router = useRouter();
 
-    return (
-        <div className="space-y-4">
-            <Box p={8}>
-                <Heading mb={4}>Dashboard</Heading>
-                <Text>Hoş geldiniz! Burada uygulamanızın içeriği olacak.</Text>
-            </Box>
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
+    }
+  }, [user, router]);
 
-            <h2 className="text-2xl font-semibold">Hoşgeldin 👋</h2>
-            <p className="text-gray-700">
-                {user?.email} olarak giriş yaptın.
-            </p>
+  if (!user) return null;
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="p-4 bg-white shadow rounded">📊 İstatistikler</div>
-                <div className="p-4 bg-white shadow rounded">📅 Etkinlikler</div>
-                <div className="p-4 bg-white shadow rounded">💬 Bildirimler</div>
-            </div>
-        </div>
-    );
+  return (
+    <Box p={8}>
+      <Heading mb={4}>Dashboard</Heading>
+      <Text>Hoş geldiniz {user.email}!</Text>
+
+      <Box mt={6}>
+        <Button colorScheme="red" onClick={logout}>
+          Çıkış Yap
+        </Button>
+      </Box>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <div className="p-4 bg-white shadow rounded">📊 İstatistikler</div>
+        <div className="p-4 bg-white shadow rounded">📅 Etkinlikler</div>
+        <div className="p-4 bg-white shadow rounded">💬 Bildirimler</div>
+      </div>
+    </Box>
+  );
 }

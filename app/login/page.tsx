@@ -1,19 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Text } from "@chakra-ui/react";
+import { useAuth } from "@/hooks/useAuth";
 import { AuthLayout, AuthCard, CustomButton, CustomInput } from "@/components";
 
-
 export default function LoginPage() {
-  const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard");
+    login(email); // login fonksiyonunu çağır
   };
 
   return (
@@ -41,7 +40,6 @@ export default function LoginPage() {
           Henüz hesabın yok mu?{" "}
           <a
             href="/register"
-            color="blue.500"
             style={{ color: "#3182CE", textDecoration: "underline" }}>
             Kayıt Ol
           </a>

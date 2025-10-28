@@ -1,5 +1,4 @@
 /* stylelint-disable at-rule-no-unknown */
-/* Tailwind directives (handled by PostCSS/Tailwind) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,3 +6,5 @@
 
 /* global custom css */
 html, body, #__next { height: 100%; }
+body { margin: 0; font-family: 'Inter', sans-serif; }
+* { box-sizing: border-box; }

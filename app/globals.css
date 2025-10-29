@@ -1,10 +1,8 @@
-/* stylelint-disable at-rule-no-unknown */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-/* stylelint-enable at-rule-no-unknown */
+.nextjs-portal {
+    display: none !important;
+}
 
-/* global custom css */
-html, body, #__next { height: 100%; }
-body { margin: 0; font-family: 'Inter', sans-serif; }
-* { box-sizing: border-box; }
+[data-nextjs-toast],
+[data-nextjs-portal] {
+    display: none !important;
+}

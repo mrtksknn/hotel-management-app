@@ -6,7 +6,7 @@ import {
     Stack,
     Text,
     Box,
-    StackSeparator,
+    Divider,
     Button,
     useToken,
     Spinner,
@@ -93,8 +93,8 @@ export default function Sidebar() {
         >
             {/* Üst Menü */}
             <Stack
-                separator={
-                    <StackSeparator
+                divider={
+                    <Divider
                         style={{ borderColor: "#ffffff1a", margin: 0, padding: 0 }}
                     />
                 }

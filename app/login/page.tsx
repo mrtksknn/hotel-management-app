@@ -24,14 +24,12 @@ export default function LoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
           <CustomInput
             placeholder="Şifre"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
           />
           <CustomButton type="submit">Giriş Yap</CustomButton>
         </form>

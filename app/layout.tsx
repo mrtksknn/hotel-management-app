@@ -45,15 +45,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 display="flex"
                 justifyContent="center"
                 alignItems="flex-start"
-                p={8}
               >
                 <Container
                   maxW="1080px"
                   w="100%"
                   bg="white"
-                  boxShadow="md"
                   borderRadius="lg"
-                  p={6}
+                  py={3}
                 >
                   {children}
                 </Container>

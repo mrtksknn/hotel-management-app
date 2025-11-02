@@ -57,21 +57,18 @@ export default function RegisterPage() {
             placeholder="Ad Soyad"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            required
           />
           <CustomInput
             placeholder="E-posta"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
           <CustomInput
             placeholder="Şifre"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
           />
           <CustomButton type="submit" colorScheme="green">
             Kayıt Ol

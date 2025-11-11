@@ -31,17 +31,8 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <CustomButton type="submit">Giriş Yap</CustomButton>
+          <CustomButton style={{ width: '100%' }} type="submit">Giriş Yap</CustomButton>
         </form>
-
-        <Text mt={4} textAlign="center" fontSize="sm">
-          Henüz hesabın yok mu?{" "}
-          <a
-            href="/register"
-            style={{ color: "#3182CE", textDecoration: "underline" }}>
-            Kayıt Ol
-          </a>
-        </Text>
       </AuthCard>
     </AuthLayout>
   );

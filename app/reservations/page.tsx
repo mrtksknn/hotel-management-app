@@ -18,6 +18,9 @@ export default function ReservationsPage() {
     const itemsPerPage = 10;
     const toast = useToast();
 
+    // 🔹 Bugünün tarihi sabit olarak 12 Temmuz 2025
+    const today = new Date("2025-07-12");
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -61,17 +64,37 @@ export default function ReservationsPage() {
         onOpen();
     };
 
-    // 🔹 Gece sayısını hesaplayan fonksiyon
+    // 🔹 Gece sayısı hesaplama
     const calculateNights = (start: Date, end: Date): number => {
         const diff = end.getTime() - start.getTime();
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
     };
 
-    // 🔹 Geceleme hesaplama fonksiyonu
+    // 🔹 Geceleme hesaplama
     const calculateGeceleme = (res: ReservationData): number => {
         const nights = calculateNights(res.baslangic_tarihi, res.bitis_tarihi);
         const totalGuests = res.pax + res.cocuk_sayisi * 0.5 + res.bebek_sayisi * 0;
         return totalGuests * nights;
+    };
+
+    // 🔹 Tarih durumuna göre renk belirleme
+    const getDateColors = (res: ReservationData) => {
+        const start = new Date(res.baslangic_tarihi);
+        const end = new Date(res.bitis_tarihi);
+
+        if (today.getTime() === start.getTime()) {
+            // Bugün başlangıç günü
+            return { bg: "orange.50", color: "orange.600" };
+        } else if (today > start && today <= end) {
+            // Rezervasyon devam ediyor
+            return { bg: "green.50", color: "green.600" };
+        } else if (today > end) {
+            // Rezervasyon bitmiş
+            return { bg: "red.50", color: "red.600" };
+        } else {
+            // Gelecek tarihli rezervasyon
+            return { bg: "blue.50", color: "blue.600" };
+        }
     };
 
     return (
@@ -119,18 +142,32 @@ export default function ReservationsPage() {
                                 </Thead>
 
                                 <Tbody>
-                                    {currentData.map((res) => (
-                                        <Tr key={res.id}>
-                                            <Td>{res.isim}</Td>
-                                            <Td>{res.tur}</Td>
-                                            <Td>{res.giris_tarihi.toLocaleDateString("tr-TR")}</Td>
-                                            <Td>{res.bitis_tarihi.toLocaleDateString("tr-TR")}</Td>
-                                            <Td>{calculateNights(res.baslangic_tarihi, res.bitis_tarihi)}</Td>
-                                            <Td>{res.pax} / {res.cocuk_sayisi} / {res.bebek_sayisi}</Td>
-                                            <Td>{calculateGeceleme(res)}</Td>
-                                            <Td>{res.ucret} ₺</Td>
-                                        </Tr>
-                                    ))}
+                                    {currentData.map((res) => {
+                                        const { bg, color } = getDateColors(res);
+                                        return (
+                                            <Tr key={res.id}>
+                                                <Td>{res.isim}</Td>
+                                                <Td>{res.tur}</Td>
+
+                                                {/* 🔹 Sadece tarih hücrelerinin arka planı değişiyor */}
+                                                <Td fontWeight="500">
+                                                    <Box padding="6px" width="fit-content" borderRadius="8" borderColor={color} border="1px solid" bg={bg} color={color}>
+                                                        {res.giris_tarihi.toLocaleDateString("tr-TR")}
+                                                    </Box>
+                                                </Td>
+                                                <Td fontWeight="500">
+                                                    <Box padding="6px" width="fit-content" borderRadius="8" borderColor={color} border="1px solid" bg={bg} color={color}>
+                                                        {res.bitis_tarihi.toLocaleDateString("tr-TR")}
+                                                    </Box>
+                                                </Td>
+
+                                                <Td>{calculateNights(res.baslangic_tarihi, res.bitis_tarihi)}</Td>
+                                                <Td>{res.pax} / {res.cocuk_sayisi} / {res.bebek_sayisi}</Td>
+                                                <Td>{calculateGeceleme(res)}</Td>
+                                                <Td>{res.ucret} ₺</Td>
+                                            </Tr>
+                                        );
+                                    })}
                                 </Tbody>
                             </Table>
 

@@ -7,12 +7,6 @@ import {
     SimpleGrid,
     Card,
     Spinner,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     useDisclosure,
     Input,
     Select,
@@ -37,6 +31,7 @@ import {
     updateUser,
 } from "@/services/userService";
 import { CustomButton } from "@/components";
+import DynamicTable from "@/components/common/DynamicTable";
 
 export default function UsersPage() {
     const [stats, setStats] = useState<any>(null);
@@ -159,12 +154,19 @@ export default function UsersPage() {
 
     return (
         <Box minH="90vh" display="flex" flexDirection="column">
-            <Text fontSize="lg" fontWeight="medium">
-                Kullanıcı Yönetimi
-            </Text>
-            <Text fontSize="sm" color="#6c757d" mb={6}>
-                Çalışanları ve rolleri yönetin.
-            </Text>
+            <Box display="flex" justifyContent="space-between" alignItems="center" w="full">
+                <Box>
+                    <Text fontSize="lg" fontWeight="medium">
+                        Kullanıcı Yönetimi
+                    </Text>
+                    <Text fontSize="sm" color="#6c757d" mb={6}>
+                        Çalışanların bilgilerini görüntüleyin ve yönetin.
+                    </Text>
+                </Box>
+                <CustomButton bg="#1e2532" color="#fff" onClick={openAddModal}>
+                    Yeni Kullanıcı Ekle
+                </CustomButton>
+            </Box>
 
             {/* İstatistikler */}
             <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={3} mb={4}>
@@ -185,38 +187,21 @@ export default function UsersPage() {
             </SimpleGrid>
 
             {/* Tablo */}
-            <Box borderWidth="1px" borderColor="#1e25321f" rounded="md" overflow="auto" p={4}>
-                <Box mb={4} display="flex" justifyContent="space-between" alignItems="center">
-                    <Box>
-                        <Text fontSize="md" fontWeight="medium">
-                            Tüm Kullanıcılar
-                        </Text>
-                        <Text fontSize="sm" color="#6c757d">
-                            Çalışanların bilgilerini görüntüleyin ve yönetin.
-                        </Text>
-                    </Box>
+            <SimpleGrid columns={{ base: 1, md: 1 }} spacing={4}>
+                <Box borderWidth="1px" borderColor="#e2e8f0" borderRadius="lg" overflowX="auto" bg="white">
 
-                    <CustomButton bg="#1e2532" color="#fff" onClick={openAddModal}>
-                        Yeni Kullanıcı Ekle
-                    </CustomButton>
-                </Box>
-
-                <Table variant="simple" size="md">
-                    <Thead bg="#f8f9fa">
-                        <Tr>
-                            <Th>İsim</Th>
-                            <Th>Mail</Th>
-                            <Th>Rol</Th>
-                            <Th>İşlemler</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
-                        {users.map((user) => (
-                            <Tr key={user.id}>
-                                <Td>{user.name}</Td>
-                                <Td>{user.email}</Td>
-                                <Td textTransform="capitalize">{user.role}</Td>
-                                <Td>
+                    <DynamicTable
+                        columns={[
+                            { header: "İsim", accessor: "name" },
+                            { header: "Mail", accessor: "email" },
+                            {
+                                header: "Rol",
+                                accessor: "role",
+                                render: (user) => <Text textTransform="capitalize">{user.role}</Text>
+                            },
+                            {
+                                header: "İşlemler",
+                                render: (user) => (
                                     <Box display="flex" gap={2}>
                                         <CustomButton
                                             variant="outline"
@@ -237,12 +222,13 @@ export default function UsersPage() {
                                             Sil
                                         </CustomButton>
                                     </Box>
-                                </Td>
-                            </Tr>
-                        ))}
-                    </Tbody>
-                </Table>
-            </Box>
+                                )
+                            }
+                        ]}
+                        data={users}
+                    />
+                </Box>
+            </SimpleGrid>
 
             {/* Kullanıcı Ekle / Güncelle Modal */}
             <Modal isOpen={isOpen} onClose={onClose}>

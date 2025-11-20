@@ -20,6 +20,38 @@ const theme = extendTheme({
       xl: { value: "16px" },
     },
   },
+  components: {
+    Table: {
+      baseStyle: {
+        th: {
+          fontFamily: "Inter, sans-serif",
+          fontWeight: "600",
+          textTransform: "none",
+          letterSpacing: "normal",
+          fontSize: "14px",
+          color: "gray.600",
+        },
+        td: {
+          fontFamily: "Inter, sans-serif",
+          fontSize: "14px",
+          color: "gray.800",
+        },
+      },
+      variants: {
+        simple: {
+          th: {
+            borderBottom: "1px solid",
+            borderColor: "gray.200",
+            bg: "gray.50",
+          },
+          td: {
+            borderBottom: "1px solid",
+            borderColor: "gray.100",
+          },
+        },
+      },
+    },
+  },
 });
 
 export default theme;

@@ -13,7 +13,7 @@ export interface ReservationData {
     bebek_sayisi: number;
     ucret: string;
     tur: string;
-    room_code?: string;
+    room_code?: string | null;
 }
 
 export const getReservationsByYear = async (year: number) => {
@@ -32,7 +32,7 @@ export const getReservationsByYear = async (year: number) => {
             bebek_sayisi: data.bebek_sayisi,
             ucret: data.ucret,
             tur: data.tur || "Normal",
-            room_code: data.room_code || null
+            room_code: data.room_code ? String(data.room_code) : null
         };
     });
 

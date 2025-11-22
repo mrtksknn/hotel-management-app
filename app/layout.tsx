@@ -4,6 +4,9 @@ import { usePathname } from "next/navigation";
 import { Box, Flex, Container } from "@chakra-ui/react";
 import Sidebar from "@/components/Sidebar";
 import { Providers } from "./providers";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,45 +16,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="tr">
-      <body>
+      <body className={inter.className}>
         <Providers>
           {isAuthPage ? (
             // 🔹 Login/Register sayfaları: Tam sayfa görünüm
-            <Box minH="100vh" bg="gray.50">
+            <Box minH="100vh">
               {children}
             </Box>
           ) : (
             // 🔹 Diğer sayfalar: Sidebar + Content layout
-            <Flex minH="100vh">
+            <Flex minH="100vh" bg="gray.50">
               {/* Sidebar */}
               <Box
-                w="225px"
-                bg="#1e2532"
-                color="white"
+                w="260px"
                 position="fixed"
                 left={0}
                 top={0}
                 bottom={0}
+                zIndex={10}
               >
                 <Sidebar />
               </Box>
 
               {/* Content */}
               <Box
-                ml="225px"
+                ml="260px"
                 flex="1"
-                bg="white"
                 minH="100vh"
                 display="flex"
                 justifyContent="center"
                 alignItems="flex-start"
               >
                 <Container
-                  maxW="1080px"
+                  maxW="1200px"
                   w="100%"
-                  bg="white"
-                  borderRadius="lg"
-                  py={3}
+                  py={0}
                 >
                   {children}
                 </Container>

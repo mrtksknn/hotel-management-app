@@ -31,7 +31,16 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <CustomButton style={{ width: '100%' }} type="submit">Giriş Yap</CustomButton>
+          <CustomButton
+            style={{ width: '100%' }}
+            type="submit"
+            bg="brand.500"
+            color="white"
+            size="lg"
+            _hover={{ bg: "brand.600", transform: "translateY(-1px)", boxShadow: "md" }}
+          >
+            Giriş Yap
+          </CustomButton>
         </form>
       </AuthCard>
     </AuthLayout>

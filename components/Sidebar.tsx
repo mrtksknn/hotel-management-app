@@ -90,68 +90,76 @@ export default function Sidebar() {
             flexDirection="column"
             justifyContent="space-between"
             height="100vh"
-            width="225px"
+            width="260px"
+            bg="white"
+            borderRight="1px solid"
+            borderColor="neutral.200"
+            boxShadow="sm"
         >
             {/* Üst Menü */}
-            <Stack
-                divider={
-                    <Divider
-                        style={{ borderColor: "#ffffff1a", margin: 0, padding: 0 }}
-                    />
-                }
-            >
+            <Stack spacing={0}>
                 {/* Logo Alanı */}
                 <Box
-                    px={4}
-                    py={3}
+                    px={5}
+                    py={5}
                     display="flex"
                     alignItems="center"
                     gap={3}
-                    borderBottom="1px solid #ffffff1a"
+                    borderBottom="1px solid"
+                    borderColor="neutral.100"
                 >
                     <Box
-                        width="2rem"
-                        height="2rem"
-                        borderRadius="md"
-                        bg="#d4af37"
+                        width="2.5rem"
+                        height="2.5rem"
+                        borderRadius="lg"
+                        bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
                         display="flex"
                         alignItems="center"
                         justifyContent="center"
-                        fontWeight="medium"
-                        color="black"
+                        fontWeight="bold"
+                        color="white"
+                        fontSize="md"
+                        boxShadow="soft"
                     >
                         GH
                     </Box>
                     <Box>
-                        <Text fontSize="sm" fontWeight="medium">
+                        <Text fontSize="md" fontWeight="semibold" color="neutral.800">
                             Grand Hotel
                         </Text>
-                        <Text fontSize="xs" color={gray}>
+                        <Text fontSize="xs" color="neutral.500">
                             Management System
                         </Text>
                     </Box>
                 </Box>
 
                 {/* Menü */}
-                <Box p={3}>
-                    <Stack>
+                <Box p={4}>
+                    <Stack spacing={1}>
                         {menuItems
                             .filter((item) =>
                                 userData ? item.roles.includes(userData.role) : false
                             )
                             .map((item) => (
-                                <Text
+                                <Box
                                     key={item.path}
-                                    px={2}
+                                    px={4}
                                     py={3}
                                     cursor="pointer"
-                                    borderRadius="md"
+                                    borderRadius="lg"
                                     fontSize="sm"
-                                    _hover={{ background: "#2c3e50" }}
+                                    fontWeight="medium"
+                                    color="neutral.700"
+                                    transition="all 0.2s ease-in-out"
+                                    _hover={{
+                                        bg: "brand.50",
+                                        color: "brand.600",
+                                        transform: "translateX(4px)"
+                                    }}
                                     onClick={() => router.push(item.path)}
                                 >
                                     {item.label}
-                                </Text>
+                                </Box>
                             ))}
                     </Stack>
                 </Box>
@@ -160,53 +168,59 @@ export default function Sidebar() {
             {/* Kullanıcı Bilgisi + Logout */}
             <Box
                 px={4}
-                py={3}
-                borderTop="1px solid #ffffff1a"
+                py={4}
+                borderTop="1px solid"
+                borderColor="neutral.100"
                 display="flex"
                 flexDirection="row"
                 alignItems="center"
                 justifyContent="space-between"
+                bg="neutral.50"
             >
                 {loading ? (
-                    <Spinner size="sm" color="gray.400" />
+                    <Spinner size="sm" color="brand.500" />
                 ) : userData ? (
-                    <Box display="flex" flexDirection="row" alignItems="center" gap={2}>
+                    <Box display="flex" flexDirection="row" alignItems="center" gap={3}>
                         <Box
-                            width="2rem"
-                            height="2rem"
-                            borderRadius="md"
-                            bg="#d4af37"
+                            width="2.5rem"
+                            height="2.5rem"
+                            borderRadius="lg"
+                            bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
                             display="flex"
                             alignItems="center"
                             justifyContent="center"
-                            color="black"
-                            fontWeight="medium"
+                            color="white"
+                            fontWeight="semibold"
+                            fontSize="sm"
+                            boxShadow="soft"
                         >
                             {getInitials(userData.name)}
                         </Box>
 
                         <Box display="flex" flexDirection="column">
-                            <Text fontSize="sm" fontWeight="medium">
+                            <Text fontSize="sm" fontWeight="semibold" color="neutral.800">
                                 {userData.name}
                             </Text>
-                            <Text fontSize="xs" color={gray}>
+                            <Text fontSize="xs" color="neutral.500" textTransform="capitalize">
                                 {userData.role}
                             </Text>
                         </Box>
                     </Box>
                 ) : (
-                    <Text fontSize="xs" color={gray}>
+                    <Text fontSize="xs" color="neutral.500">
                         Giriş yapılmadı
                     </Text>
                 )}
 
                 <Button
-                    borderRadius="md"
-                    fontSize="sm"
-                    _hover={{ background: "#2c3e50" }}
+                    size="sm"
+                    variant="ghost"
+                    colorScheme="red"
+                    borderRadius="lg"
+                    _hover={{ bg: "red.50" }}
                     onClick={logout}
                 >
-                    <LogOut size={16} />
+                    <LogOut size={18} />
                 </Button>
             </Box>
         </Box>

@@ -1,7 +1,8 @@
-import { Box, Grid, Tooltip, Text } from "@chakra-ui/react";
+import { Box, Grid, Tooltip, Text, Flex, Icon } from "@chakra-ui/react";
 import React from "react";
 import { Room } from "./types";
 import { ReservationData } from "@/services/reservationsService";
+import { Users, Baby, Moon } from "lucide-react";
 
 interface MonthGridProps {
     dayCount: number;
@@ -38,7 +39,7 @@ export default function MonthGrid({
     };
 
     const getReservationStatusColor = (reservation: ReservationData) => {
-        const today = new Date(year, 6, 12);
+        const today = new Date(year, 6, 12); // Demo tarihi
         today.setHours(0, 0, 0, 0);
 
         const start = new Date(reservation.baslangic_tarihi);
@@ -100,7 +101,6 @@ export default function MonthGrid({
             const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
             totalNights += nights;
 
-            // Toplam misafir sayıları
             totalPax += res.pax || 0;
             totalChildren += res.cocuk_sayisi || 0;
             totalBabies += res.bebek_sayisi || 0;
@@ -113,233 +113,210 @@ export default function MonthGrid({
             }
         });
 
-        // Geceleme değerleri hesaplama (yetişkin=1, çocuk=0.5, bebek=0)
         const totalOvernightValue = totalPax + (totalChildren * 0.5);
         const todayOvernightValue = todayPax + (todayChildren * 0.5);
 
         return {
-            totalNights,
-            todayNights,
-            totalPax,
-            totalChildren,
-            totalBabies,
-            todayPax,
-            todayChildren,
-            todayBabies,
-            totalOvernightValue,
-            todayOvernightValue,
+            totalNights, todayNights,
+            totalPax, totalChildren, totalBabies,
+            todayPax, todayChildren, todayBabies,
+            totalOvernightValue, todayOvernightValue,
         };
     };
 
     const stats = calculateStats();
 
+    // Minimal İstatistik Kartı Bileşeni
+    const StatCard = ({ title, value, subValue, icon, color }: any) => (
+        <Box
+            p={5}
+            borderRadius="xl"
+            bg="white"
+            border="1px solid"
+            borderColor="neutral.100"
+            boxShadow="sm"
+            transition="all 0.2s"
+            _hover={{ transform: "translateY(-2px)", boxShadow: "soft" }}
+            display="flex"
+            alignItems="center"
+            gap={4}
+        >
+            <Box
+                p={3}
+                borderRadius="lg"
+                bg={`${color}.50`}
+                color={`${color}.500`}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+            >
+                <Icon as={icon} boxSize={6} />
+            </Box>
+            <Box>
+                <Text fontSize="xs" fontWeight="medium" color="neutral.500" textTransform="uppercase" letterSpacing="wide">
+                    {title}
+                </Text>
+                <Flex alignItems="baseline" gap={2}>
+                    <Text fontSize="2xl" fontWeight="bold" color="neutral.800">
+                        {value}
+                    </Text>
+                    {subValue && (
+                        <Text fontSize="sm" color="neutral.400">
+                            {subValue}
+                        </Text>
+                    )}
+                </Flex>
+            </Box>
+        </Box>
+    );
+
     return (
         <Box>
-            {/* İstatistikler */}
+            {/* İstatistikler - Minimal Grid */}
             <Box
-                mb={6}
+                mb={8}
                 display="grid"
                 gridTemplateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-                gap={4}
+                gap={6}
             >
-                {/* Toplam Geceleme */}
-                <Box
-                    p={4}
-                    borderRadius="2xl"
-                    bg="blue.50"
-                    border="1px solid"
-                    borderColor="blue.100"
-                    transition="all 0.2s"
-                    _hover={{ transform: "translateY(-2px)", boxShadow: "md", borderColor: "blue.300" }}
-                    display="flex"
-                    flexDirection="column"
-                    justifyContent="space-between"
-                >
-                    <Text fontSize="xs" fontWeight="bold" color="blue.600" letterSpacing="wider" textTransform="uppercase" mb={3}>
-                        Toplam Geceleme
-                    </Text>
-                    <Box display="flex" gap={3} justifyContent="space-between" mb={2}>
-                        <Box>
-                            <Text fontSize="lg" fontWeight="bold" color="blue.700">
-                                {stats.totalPax}
-                            </Text>
-                            <Text fontSize="xs" color="blue.600">Yetişkin</Text>
-                        </Box>
-                        <Box>
-                            <Text fontSize="lg" fontWeight="bold" color="blue.700">
-                                {stats.totalChildren}
-                            </Text>
-                            <Text fontSize="xs" color="blue.600">Çocuk</Text>
-                        </Box>
-                        <Box>
-                            <Text fontSize="lg" fontWeight="bold" color="blue.700">
-                                {stats.totalBabies}
-                            </Text>
-                            <Text fontSize="xs" color="blue.600">Bebek</Text>
-                        </Box>
-                    </Box>
-                    <Box borderTop="1px solid" borderColor="blue.200" pt={2}>
-                        <Text fontSize="xs" color="blue.600" mb={1}>Geceleme Değeri</Text>
-                        <Text fontSize="2xl" fontWeight="bold" color="blue.700">
-                            {stats.totalOvernightValue.toFixed(1)}
-                        </Text>
-                    </Box>
-                </Box>
-
-                {/* Bugünkü Geceleme */}
-                <Box
-                    p={4}
-                    borderRadius="2xl"
-                    bg="green.50"
-                    border="1px solid"
-                    borderColor="green.100"
-                    transition="all 0.2s"
-                    _hover={{ transform: "translateY(-2px)", boxShadow: "md", borderColor: "green.300" }}
-                    display="flex"
-                    flexDirection="column"
-                    justifyContent="space-between"
-                >
-                    <Text fontSize="xs" fontWeight="bold" color="green.600" letterSpacing="wider" textTransform="uppercase" mb={3}>
-                        Bugünkü Geceleme
-                    </Text>
-                    <Box display="flex" gap={3} justifyContent="space-between" mb={2}>
-                        <Box>
-                            <Text fontSize="lg" fontWeight="bold" color="green.700">
-                                {stats.todayPax}
-                            </Text>
-                            <Text fontSize="xs" color="green.600">Yetişkin</Text>
-                        </Box>
-                        <Box>
-                            <Text fontSize="lg" fontWeight="bold" color="green.700">
-                                {stats.todayChildren}
-                            </Text>
-                            <Text fontSize="xs" color="green.600">Çocuk</Text>
-                        </Box>
-                        <Box>
-                            <Text fontSize="lg" fontWeight="bold" color="green.700">
-                                {stats.todayBabies}
-                            </Text>
-                            <Text fontSize="xs" color="green.600">Bebek</Text>
-                        </Box>
-                    </Box>
-                    <Box borderTop="1px solid" borderColor="green.200" pt={2}>
-                        <Text fontSize="xs" color="green.600" mb={1}>Geceleme Değeri</Text>
-                        <Text fontSize="2xl" fontWeight="bold" color="green.700">
-                            {stats.todayOvernightValue.toFixed(1)}
-                        </Text>
-                    </Box>
-                </Box>
-
-                {/* Bugünkü Misafirler */}
-                <Box
-                    p={4}
-                    borderRadius="2xl"
-                    bg="purple.50"
-                    border="1px solid"
-                    borderColor="purple.100"
-                    transition="all 0.2s"
-                    _hover={{ transform: "translateY(-2px)", boxShadow: "md", borderColor: "purple.300" }}
-                    display="flex"
-                    flexDirection="column"
-                    justifyContent="space-between"
-                >
-                    <Text fontSize="xs" fontWeight="bold" color="purple.600" letterSpacing="wider" textTransform="uppercase" mb={3}>
-                        Bugünkü Misafirler
-                    </Text>
-                    <Box display="flex" gap={4} justifyContent="space-between">
-                        <Box>
-                            <Text fontSize="2xl" fontWeight="bold" color="purple.700">
-                                {stats.todayPax}
-                            </Text>
-                            <Text fontSize="xs" color="purple.600" mt={1}>Yetişkin</Text>
-                        </Box>
-                        <Box>
-                            <Text fontSize="2xl" fontWeight="bold" color="purple.700">
-                                {stats.todayChildren}
-                            </Text>
-                            <Text fontSize="xs" color="purple.600" mt={1}>Çocuk</Text>
-                        </Box>
-                        <Box>
-                            <Text fontSize="2xl" fontWeight="bold" color="purple.700">
-                                {stats.todayBabies}
-                            </Text>
-                            <Text fontSize="xs" color="purple.600" mt={1}>Bebek</Text>
-                        </Box>
-                    </Box>
-                </Box>
+                <StatCard
+                    title="Toplam Geceleme"
+                    value={stats.totalOvernightValue.toFixed(1)}
+                    subValue={`${stats.totalPax} Yetişkin`}
+                    icon={Moon}
+                    color="blue"
+                />
+                <StatCard
+                    title="Bugünkü Doluluk"
+                    value={stats.todayOvernightValue.toFixed(1)}
+                    subValue="Geceleme Değeri"
+                    icon={Users}
+                    color="green"
+                />
+                <StatCard
+                    title="Bugünkü Misafir"
+                    value={stats.todayPax + stats.todayChildren}
+                    subValue={`+${stats.todayBabies} Bebek`}
+                    icon={Baby}
+                    color="purple"
+                />
             </Box>
 
-            {/* Grid */}
+            {/* Takvim Grid */}
             <Box
                 bg="white"
-                borderRadius="xl"
-                boxShadow="md"
+                borderRadius="2xl"
+                boxShadow="soft"
                 overflow="hidden"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor="neutral.100"
             >
                 <Box
-                    maxH="calc(100vh - 400px)"
+                    maxH="calc(100vh - 350px)"
                     overflowX="auto"
                     overflowY="auto"
                     sx={{
-                        '&::-webkit-scrollbar': {
-                            width: '8px',
-                            height: '8px',
-                        },
-                        '&::-webkit-scrollbar-track': {
-                            bg: 'gray.100',
-                        },
-                        '&::-webkit-scrollbar-thumb': {
-                            bg: 'gray.400',
-                            borderRadius: 'full',
-                        },
-                        '&::-webkit-scrollbar-thumb:hover': {
-                            bg: 'gray.500',
-                        },
+                        '&::-webkit-scrollbar': { width: '6px', height: '6px' },
+                        '&::-webkit-scrollbar-track': { bg: 'transparent' },
+                        '&::-webkit-scrollbar-thumb': { bg: 'neutral.200', borderRadius: 'full' },
+                        '&::-webkit-scrollbar-thumb:hover': { bg: 'neutral.300' },
                     }}
                 >
                     <Grid
-                        templateColumns={`60px 100px repeat(${days.length}, 1fr)`}
-                        bg="#f8f9fa"
+                        templateColumns={`60px 80px repeat(${days.length}, minmax(40px, 1fr))`}
                         fontSize="sm"
-                        fontWeight="medium"
                         position="relative"
                         minWidth="fit-content"
                     >
-                        <Box borderRight="1px solid #dee2e6" textAlign="center" bg="gray.100" position="sticky" top={0} zIndex={2} p={2}>No</Box>
-                        <Box borderRight="1px solid #dee2e6" textAlign="center" bg="gray.100" position="sticky" top={0} zIndex={2} p={2}>Kod</Box>
+                        {/* Header Row */}
+                        <Box position="sticky" top={0} zIndex={10} bg="white" borderBottom="1px solid" borderColor="neutral.100">
+                            <Flex h="full" align="center" justify="center" fontWeight="semibold" color="neutral.500" fontSize="xs">NO</Flex>
+                        </Box>
+                        <Box position="sticky" top={0} zIndex={10} bg="white" borderBottom="1px solid" borderColor="neutral.100" borderRight="1px solid" borderRightColor="neutral.100">
+                            <Flex h="full" align="center" justify="center" fontWeight="semibold" color="neutral.500" fontSize="xs">KOD</Flex>
+                        </Box>
 
                         {days.map((day) => (
-                            <Box key={day} p={1.5} borderRight="1px solid #dee2e6" textAlign="center" bg={day === highlightDay ? "blue.100" : "gray.100"} position="sticky" top={0} zIndex={2}>
-                                {day}
+                            <Box
+                                key={day}
+                                position="sticky"
+                                top={0}
+                                zIndex={10}
+                                bg={day === highlightDay ? "blue.50" : "white"}
+                                borderBottom="1px solid"
+                                borderColor={day === highlightDay ? "blue.200" : "neutral.100"}
+                                borderRight="1px solid"
+                                borderRightColor="neutral.50"
+                                py={3}
+                            >
+                                <Flex direction="column" align="center" justify="center">
+                                    <Text
+                                        fontSize="sm"
+                                        fontWeight={day === highlightDay ? "bold" : "medium"}
+                                        color={day === highlightDay ? "blue.600" : "neutral.600"}
+                                    >
+                                        {day}
+                                    </Text>
+                                </Flex>
                             </Box>
                         ))}
 
-                        {rooms.map((room) => {
+                        {/* Room Rows */}
+                        {rooms.map((room, index) => {
                             const roomReservations = getReservationsForRoom(room.no);
+                            const isEven = index % 2 === 0;
 
                             return (
                                 <React.Fragment key={`room-row-${room.no}`}>
-                                    <Box p={2} borderTop="1px solid #dee2e6" borderRight="1px solid #dee2e6" bg="#3182ce" color="white" textAlign="center" fontWeight="medium">{room.no}</Box>
-                                    <Box p={2} borderTop="1px solid #dee2e6" borderRight="1px solid #dee2e6" bg="#fff" textAlign="center">{room.code || "-"}</Box>
+                                    {/* Room No */}
+                                    <Box
+                                        bg={isEven ? "white" : "neutral.50"}
+                                        borderBottom="1px solid"
+                                        borderColor="neutral.100"
+                                        py={3}
+                                    >
+                                        <Flex h="full" align="center" justify="center" fontWeight="bold" color="neutral.700">
+                                            {room.no}
+                                        </Flex>
+                                    </Box>
 
+                                    {/* Room Code */}
+                                    <Box
+                                        bg={isEven ? "white" : "neutral.50"}
+                                        borderBottom="1px solid"
+                                        borderColor="neutral.100"
+                                        borderRight="1px solid"
+                                        borderRightColor="neutral.100"
+                                        py={3}
+                                    >
+                                        <Flex h="full" align="center" justify="center" color="neutral.500" fontSize="xs">
+                                            {room.code || "-"}
+                                        </Flex>
+                                    </Box>
+
+                                    {/* Days Grid for Room */}
                                     <Box
                                         gridColumn={`3 / ${3 + days.length}`}
-                                        borderTop="1px solid #dee2e6"
                                         position="relative"
-                                        height="38px"
+                                        height="50px"
                                         display="grid"
                                         gridTemplateColumns={`repeat(${days.length}, 1fr)`}
+                                        bg={isEven ? "white" : "neutral.50"}
+                                        borderBottom="1px solid"
+                                        borderColor="neutral.100"
                                     >
+                                        {/* Grid Lines */}
                                         {days.map((day, idx) => (
                                             <Box
                                                 key={`bg-${day}`}
-                                                borderRight={idx < days.length - 1 ? "1px solid #dee2e6" : "none"}
-                                                bg={day === highlightDay ? "blue.50" : "#fafafa"}
+                                                borderRight="1px solid"
+                                                borderColor="neutral.50"
+                                                bg={day === highlightDay ? "blue.50" : "transparent"}
+                                                opacity={day === highlightDay ? 0.3 : 1}
                                             />
                                         ))}
 
+                                        {/* Reservations */}
                                         {roomReservations.map((reservation, resIdx) => {
                                             const pos = getReservationPosition(reservation);
                                             const colorScheme = getReservationStatusColor(reservation);
@@ -351,33 +328,44 @@ export default function MonthGrid({
                                             return (
                                                 <Tooltip
                                                     key={`res-${resIdx}`}
-                                                    label={`${reservation.isim} (${reservation.tur}) - ${new Date(reservation.baslangic_tarihi).toLocaleDateString('tr-TR')} / ${new Date(reservation.bitis_tarihi).toLocaleDateString('tr-TR')}`}
-                                                    aria-label="Rezervasyon"
+                                                    label={`${reservation.isim} (${reservation.tur})`}
+                                                    hasArrow
+                                                    bg="neutral.800"
+                                                    color="white"
+                                                    fontSize="xs"
+                                                    borderRadius="md"
+                                                    p={2}
                                                 >
                                                     <Box
                                                         position="absolute"
+                                                        top="50%"
+                                                        transform="translateY(-50%)"
                                                         left={`${leftPercent}%`}
                                                         width={`${widthPercent}%`}
-                                                        height="100%"
+                                                        height="32px"
                                                         bg={`${colorScheme}.300`}
-                                                        borderLeft="1px solid"
-                                                        borderRight="1px solid"
+                                                        border="1px solid"
                                                         borderColor={`${colorScheme}.400`}
+                                                        color={colorScheme === 'yellow' ? 'black' : 'white'}
+                                                        borderRadius="full"
                                                         display="flex"
                                                         alignItems="center"
                                                         justifyContent="center"
                                                         cursor="pointer"
-                                                        overflow="hidden"
-                                                        px={1}
-                                                        zIndex={1}
+                                                        px={3}
+                                                        zIndex={5}
+                                                        boxShadow="sm"
+                                                        transition="all 0.2s"
                                                         _hover={{
                                                             bg: `${colorScheme}.400`,
+                                                            transform: "translateY(-50%) scale(1.02)",
+                                                            boxShadow: "md",
+                                                            zIndex: 10
                                                         }}
                                                     >
                                                         <Text
                                                             fontSize="xs"
-                                                            fontWeight="bold"
-                                                            color="white"
+                                                            fontWeight="semibold"
                                                             whiteSpace="nowrap"
                                                             overflow="hidden"
                                                             textOverflow="ellipsis"
@@ -394,7 +382,7 @@ export default function MonthGrid({
                         })}
                     </Grid>
                 </Box>
-            </Box>
-        </Box>
+            </Box >
+        </Box >
     );
 }

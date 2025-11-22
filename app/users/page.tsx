@@ -153,82 +153,91 @@ export default function UsersPage() {
     ];
 
     return (
-        <Box minH="90vh" display="flex" flexDirection="column">
-            <Box display="flex" justifyContent="space-between" alignItems="center" w="full">
+        <Box minH="90vh" display="flex" flexDirection="column" p={6}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" w="full" mb={6}>
                 <Box>
-                    <Text fontSize="lg" fontWeight="medium">
+                    <Text fontSize="2xl" fontWeight="semibold" color="neutral.800">
                         Kullanıcı Yönetimi
                     </Text>
-                    <Text fontSize="sm" color="#6c757d" mb={6}>
+                    <Text fontSize="sm" color="neutral.500" mt={1}>
                         Çalışanların bilgilerini görüntüleyin ve yönetin.
                     </Text>
                 </Box>
-                <CustomButton bg="#1e2532" color="#fff" onClick={openAddModal}>
+                <CustomButton bg="brand.500" color="white" _hover={{ bg: "brand.600" }} onClick={openAddModal}>
                     Yeni Kullanıcı Ekle
                 </CustomButton>
             </Box>
 
             {/* İstatistikler */}
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={3} mb={4}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={4} mb={6}>
                 {statsArray.map((stat) => (
                     <Card
                         key={stat.title}
-                        borderRadius="lg"
-                        borderColor="#1e25321f"
+                        borderRadius="xl"
+                        borderColor="neutral.200"
                         borderWidth="1px"
-                        p={4}
+                        p={5}
+                        bg="white"
+                        boxShadow="sm"
+                        transition="all 0.2s ease-in-out"
+                        _hover={{ boxShadow: "md", transform: "translateY(-2px)" }}
                     >
-                        <Text fontSize="sm" fontWeight="medium">
+                        <Text fontSize="sm" fontWeight="medium" color="neutral.600" mb={2}>
                             {stat.title}
                         </Text>
-                        <Text>{stat.count}</Text>
+                        <Text fontSize="2xl" fontWeight="bold" color="brand.600">{stat.count}</Text>
                     </Card>
                 ))}
             </SimpleGrid>
 
             {/* Tablo */}
-            <SimpleGrid columns={{ base: 1, md: 1 }} spacing={4}>
-                <Box borderWidth="1px" borderColor="#e2e8f0" borderRadius="lg" overflowX="auto" bg="white">
+            <Card borderRadius="xl"
+                borderColor="neutral.200"
+                borderWidth="1px"
+                p={5}
+                bg="white"
+                boxShadow="sm">
+                <DynamicTable
+                    columns={[
+                        { header: "İsim", accessor: "name" },
+                        { header: "Mail", accessor: "email" },
+                        {
+                            header: "Rol",
+                            accessor: "role",
+                            render: (user) => <Text textTransform="capitalize">{user.role}</Text>
+                        },
+                        {
+                            header: "İşlemler",
+                            render: (user) => (
+                                <Box display="flex" gap={2}>
+                                    <CustomButton
+                                        variant="outline"
+                                        borderColor="brand.500"
+                                        color="brand.500"
+                                        size="sm"
+                                        _hover={{ bg: "brand.50" }}
+                                        onClick={() => openEditModal(user)}
+                                    >
+                                        Güncelle
+                                    </CustomButton>
+                                    <CustomButton
+                                        variant="outline"
+                                        borderColor="red.500"
+                                        color="red.500"
+                                        size="sm"
+                                        _hover={{ bg: "red.50" }}
+                                        onClick={() => user.id && handleDeleteUser(user.id)}
+                                    >
+                                        Sil
+                                    </CustomButton>
+                                </Box>
+                            )
+                        }
+                    ]}
+                    data={users}
+                />
+            </Card>
 
-                    <DynamicTable
-                        columns={[
-                            { header: "İsim", accessor: "name" },
-                            { header: "Mail", accessor: "email" },
-                            {
-                                header: "Rol",
-                                accessor: "role",
-                                render: (user) => <Text textTransform="capitalize">{user.role}</Text>
-                            },
-                            {
-                                header: "İşlemler",
-                                render: (user) => (
-                                    <Box display="flex" gap={2}>
-                                        <CustomButton
-                                            variant="outline"
-                                            borderColor="#007bff"
-                                            color="#007bff"
-                                            size="sm"
-                                            onClick={() => openEditModal(user)}
-                                        >
-                                            Güncelle
-                                        </CustomButton>
-                                        <CustomButton
-                                            variant="outline"
-                                            borderColor="#dc3545"
-                                            color="#dc3545"
-                                            size="sm"
-                                            onClick={() => user.id && handleDeleteUser(user.id)}
-                                        >
-                                            Sil
-                                        </CustomButton>
-                                    </Box>
-                                )
-                            }
-                        ]}
-                        data={users}
-                    />
-                </Box>
-            </SimpleGrid>
 
             {/* Kullanıcı Ekle / Güncelle Modal */}
             <Modal isOpen={isOpen} onClose={onClose}>
@@ -269,10 +278,11 @@ export default function UsersPage() {
                     </ModalBody>
 
                     <ModalFooter display="flex" gap={2}>
-                        <CustomButton onClick={onClose}>Vazgeç</CustomButton>
+                        <CustomButton variant="ghost" onClick={onClose}>Vazgeç</CustomButton>
                         <CustomButton
-                            bg="#1e2532"
-                            color="#fff"
+                            bg="brand.500"
+                            color="white"
+                            _hover={{ bg: "brand.600" }}
                             onClick={mode === "add" ? handleAddUser : handleUpdateUser}
                         >
                             {mode === "add" ? "Ekle" : "Güncelle"}

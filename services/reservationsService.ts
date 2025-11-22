@@ -20,17 +20,26 @@ export const getReservationsByYear = async (year: number) => {
     const snapshot = await getDocs(collection(db, "reservations"));
     const reservations = snapshot.docs.map(docSnap => {
         const data = docSnap.data();
+
+        // Güvenli tarih dönüşümü
+        const safeToDate = (field: any): Date => {
+            if (!field) return new Date();
+            if (field.toDate) return field.toDate();
+            if (typeof field === 'string') return new Date(field);
+            return new Date();
+        };
+
         return {
             docId: docSnap.id,
             id: data.id,
             isim: data.isim,
-            giris_tarihi: data.giris_tarihi.toDate(),
-            baslangic_tarihi: data.baslangic_tarihi.toDate(),
-            bitis_tarihi: data.bitis_tarihi.toDate(),
-            pax: data.pax,
-            cocuk_sayisi: data.cocuk_sayisi,
-            bebek_sayisi: data.bebek_sayisi,
-            ucret: data.ucret,
+            giris_tarihi: safeToDate(data.giris_tarihi || data.baslangic_tarihi),
+            baslangic_tarihi: safeToDate(data.baslangic_tarihi),
+            bitis_tarihi: safeToDate(data.bitis_tarihi),
+            pax: data.pax || 0,
+            cocuk_sayisi: data.cocuk_sayisi || 0,
+            bebek_sayisi: data.bebek_sayisi || 0,
+            ucret: data.ucret || "₺0.00",
             tur: data.tur || "Normal",
             room_code: data.room_code ? String(data.room_code) : null
         };

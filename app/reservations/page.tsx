@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import {
     Box, Text, Tr, Td, Spinner, Badge, Flex,
     ButtonGroup, Button, useDisclosure,
-    Select, SimpleGrid
+    Select, SimpleGrid, Icon
 } from "@chakra-ui/react";
 import CustomButton from "@/components/common/CustomButton";
-import DynamicTable, { Column } from "@/components/common/DynamicTable";
+import DynamicTable from "@/components/common/DynamicTable";
 import { getReservationsByYear, ReservationData, summarizeByTur } from "../../services/reservationsService";
 import ReservationModal from "./ReservationModal";
 import { calculateGeceleme, formatDate, getDateColors, parseUcret, getTurColor } from "./utils";
+import { Users, Moon, Wallet, Calendar } from "lucide-react";
 
 export default function ReservationsPage() {
     if (typeof window === "undefined") return null;
@@ -73,12 +74,55 @@ export default function ReservationsPage() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = reservations.slice(startIndex, startIndex + itemsPerPage);
 
-    return (
-        <Box minH="90vh" display="flex" flexDirection="column">
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
+    // Minimal İstatistik Kartı
+    const StatCard = ({ title, value, subValue, icon, colorScheme }: any) => (
+        <Box
+            p={5}
+            borderRadius="xl"
+            bg="white"
+            border="1px solid"
+            borderColor="neutral.100"
+            boxShadow="sm"
+            transition="all 0.2s"
+            _hover={{ transform: "translateY(-2px)", boxShadow: "soft" }}
+            display="flex"
+            alignItems="center"
+            gap={4}
+        >
+            <Box
+                p={3}
+                borderRadius="lg"
+                bg={`${colorScheme}.50`}
+                color={`${colorScheme}.500`}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+            >
+                <Icon as={icon} boxSize={6} />
+            </Box>
+            <Box>
+                <Text fontSize="xs" fontWeight="medium" color="neutral.500" textTransform="uppercase" letterSpacing="wide">
+                    {title}
+                </Text>
                 <Box>
-                    <Text fontSize="lg" fontWeight="medium">Rezervasyon yönetimi</Text>
-                    <Text fontSize="sm" color="#6c757d" mb={6}>
+                    <Text fontSize="lg" fontWeight="bold" color="neutral.800">
+                        {value}
+                    </Text>
+                    <Text fontSize="xs" color="neutral.400">
+                        {subValue}
+                    </Text>
+                </Box>
+            </Box>
+        </Box>
+    );
+
+    return (
+        <Box minH="90vh" display="flex" flexDirection="column" p={8} bg="gray.50">
+            {/* Header */}
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={8}>
+                <Box>
+                    <Text fontSize="3xl" fontWeight="bold" color="neutral.900" letterSpacing="tight">Rezervasyon Yönetimi</Text>
+                    <Text fontSize="md" color="neutral.500" mt={2}>
                         Tüm rezervasyon ve misafir bilgilerini buradan görüntüleyebilirsiniz.
                     </Text>
                 </Box>
@@ -87,139 +131,154 @@ export default function ReservationsPage() {
                         width="120px"
                         value={selectedYear}
                         onChange={(e) => { setSelectedYear(Number(e.target.value)); setCurrentPage(1); }}
+                        variant="filled"
+                        bg="white"
+                        borderRadius="xl"
+                        fontWeight="semibold"
+                        color="neutral.700"
+                        _hover={{ bg: "white", shadow: "sm" }}
+                        _focus={{ bg: "white", shadow: "md", borderColor: "brand.500" }}
                     >
                         {years.map((y) => (<option key={y} value={y}>{y}</option>))}
                     </Select>
-                    <CustomButton bg="#1e2532" color="#fff" onClick={onOpen}>Yeni rezervasyon ekle</CustomButton>
+                    <CustomButton
+                        bg="brand.500"
+                        color="white"
+                        _hover={{ bg: "brand.600", transform: "translateY(-1px)", shadow: "md" }}
+                        _active={{ transform: "translateY(0)" }}
+                        onClick={onOpen}
+                        px={6}
+                        h="40px"
+                        borderRadius="xl"
+                        fontSize="sm"
+                        fontWeight="semibold"
+                        leftIcon={<Icon as={Calendar} />}
+                    >
+                        Yeni Rezervasyon
+                    </CustomButton>
                 </Box>
             </Box>
 
             {Object.keys(summaryByTur).length > 0 && (
                 <SimpleGrid
-                    columns={{
-                        base: Math.min(Object.keys(summaryByTur).length, 2),
-                        md: Math.min(Object.keys(summaryByTur).length, 3),
-                        lg: Math.min(Object.keys(summaryByTur).length, 6)
-                    }}
-                    spacing={4}
-                    mb={6}
+                    columns={{ base: 1, md: 2, lg: 4 }}
+                    spacing={6}
+                    mb={8}
                 >
                     {Object.entries(summaryByTur).map(([tur, values]) => {
                         const colorScheme = getTurColor(tur);
                         return (
-                            <Box
+                            <StatCard
                                 key={tur}
-                                p={4}
-                                borderRadius="2xl"
-                                bg={`${colorScheme}.50`}
-                                border="1px solid"
-                                borderColor={`${colorScheme}.100`}
-                                transition="all 0.2s"
-                                _hover={{ transform: "translateY(-2px)", boxShadow: "md", borderColor: `${colorScheme}.300` }}
-                                display="flex"
-                                flexDirection="column"
-                                justifyContent="space-between"
-                            >
-                                <Flex justifyContent="space-between" alignItems="start" mb={3}>
-                                    <Text fontSize="xs" fontWeight="bold" color={`${colorScheme}.600`} letterSpacing="wider" textTransform="uppercase">
-                                        {tur}
-                                    </Text>
-                                    <Box w="2" h="2" borderRadius="full" bg={`${colorScheme}.400`} />
-                                </Flex>
-
-                                <Box>
-                                    <Text fontSize="lg" fontWeight="800" color={`${colorScheme}.800`} lineHeight="1" mb={1}>
-                                        {values.totalUcret.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} ₺
-                                    </Text>
-                                    <Text fontSize="xs" fontWeight="medium" color={`${colorScheme}.600`}>
-                                        {values.totalGeceleme} Geceleme
-                                    </Text>
-                                </Box>
-                            </Box>
+                                title={tur}
+                                value={`${values.totalUcret.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} ₺`}
+                                subValue={`${values.totalGeceleme} Geceleme`}
+                                icon={Wallet}
+                                colorScheme={colorScheme}
+                            />
                         );
                     })}
                 </SimpleGrid>
             )}
 
             <SimpleGrid columns={{ base: 1, md: 1 }} spacing={4}>
-                <Box borderWidth="1px" borderColor="#e2e8f0" borderRadius="lg" overflowX="auto" bg="white">
+                <Box
+                    border="1px solid"
+                    borderColor="neutral.100"
+                    borderRadius="2xl"
+                    overflowX="auto"
+                    bg="white"
+                    boxShadow="soft"
+                >
                     {loading ? (
-                        <Box textAlign="center" p={10}><Spinner size="lg" /><Text mt={3}>Veriler yükleniyor...</Text></Box>
+                        <Box textAlign="center" p={10}><Spinner size="lg" color="brand.500" thickness="3px" /><Text mt={4} color="neutral.500" fontWeight="medium">Veriler yükleniyor...</Text></Box>
                     ) : (
                         <>
                             <DynamicTable
                                 columns={[
                                     {
-                                        header: "İsim",
+                                        header: "MİSAFİR",
                                         render: (res) => (
                                             <Box>
-                                                <Text fontWeight="500">{res.isim}</Text>
+                                                <Text fontWeight="semibold" color="neutral.800">{res.isim}</Text>
                                                 {res.room_code && (
-                                                    <Text fontSize="12px" color="gray.600" mt={1}>
-                                                        Oda: <b>{res.room_code}</b>
-                                                    </Text>
+                                                    <Flex align="center" gap={1} mt={1}>
+                                                        <Badge size="sm" colorScheme="gray" variant="subtle" borderRadius="md">
+                                                            ODA {res.room_code}
+                                                        </Badge>
+                                                    </Flex>
                                                 )}
                                             </Box>
                                         )
                                     },
                                     {
-                                        header: "Tur",
+                                        header: "TUR",
                                         accessor: "tur",
                                         render: (res) => (
-                                            <Badge colorScheme={getTurColor(res.tur)} variant="subtle" px={2} py={1} borderRadius="md">
+                                            <Badge colorScheme={getTurColor(res.tur)} variant="subtle" px={2.5} py={1} borderRadius="lg" textTransform="uppercase" letterSpacing="wide" fontSize="xs" fontWeight="bold">
                                                 {res.tur}
                                             </Badge>
                                         )
                                     },
                                     {
-                                        header: "Giriş / Çıkış",
+                                        header: "TARİHLER",
                                         render: (res) => {
                                             const { bg, color } = getDateColors(res);
                                             return (
-                                                <Box display="flex" alignItems="center" gap={2}>
-                                                    <Box padding="3px 6px" borderRadius="md" borderColor={color} border="1px solid" bg={bg} color={color} fontSize="xs" fontWeight="bold">
+                                                <Flex align="center" gap={2}>
+                                                    <Badge variant="outline" colorScheme={color.split('.')[0]} borderRadius="md" px={2} py={1}>
                                                         {formatDate(res.giris_tarihi)}
-                                                    </Box>
-                                                    <Text fontSize="sm" color="gray.400">-</Text>
-                                                    <Box padding="3px 6px" borderRadius="md" borderColor={color} border="1px solid" bg={bg} color={color} fontSize="xs" fontWeight="bold">
+                                                    </Badge>
+                                                    <Text fontSize="xs" color="neutral.400">→</Text>
+                                                    <Badge variant="outline" colorScheme={color.split('.')[0]} borderRadius="md" px={2} py={1}>
                                                         {formatDate(res.bitis_tarihi)}
-                                                    </Box>
-                                                </Box>
+                                                    </Badge>
+                                                </Flex>
                                             );
                                         }
                                     },
                                     {
-                                        header: "P / Ç / B",
+                                        header: "KİŞİ SAYISI",
                                         textAlign: "center",
-                                        render: (res) => `${res.pax} / ${res.cocuk_sayisi} / ${res.bebek_sayisi}`
+                                        render: (res) => (
+                                            <Flex justify="center" gap={3} color="neutral.600" fontSize="sm">
+                                                <Flex align="center" gap={1} title="Yetişkin"><Icon as={Users} boxSize={3} /> {res.pax}</Flex>
+                                                {res.cocuk_sayisi > 0 && <Flex align="center" gap={1} title="Çocuk" color="neutral.500">+{res.cocuk_sayisi}</Flex>}
+                                                {res.bebek_sayisi > 0 && <Flex align="center" gap={1} title="Bebek" color="neutral.400">+{res.bebek_sayisi}B</Flex>}
+                                            </Flex>
+                                        )
                                     },
                                     {
-                                        header: "Geceleme",
+                                        header: "GECELEME",
                                         textAlign: "center",
-                                        render: (res) => calculateGeceleme(res)
+                                        render: (res) => (
+                                            <Text fontWeight="medium" color="neutral.700">{calculateGeceleme(res)}</Text>
+                                        )
                                     },
                                     {
-                                        header: "Ücret",
+                                        header: "ÜCRET",
                                         textAlign: "center",
-                                        render: (res) => `${res.ucret} ₺`
+                                        render: (res) => (
+                                            <Text fontWeight="bold" color="brand.600">{res.ucret} ₺</Text>
+                                        )
                                     }
                                 ]}
                                 data={currentData}
                                 footer={
-                                    <Tr bg="gray.50" fontWeight="bold">
-                                        <Td fontSize="14px"><strong>{reservations.length} rezervasyon</strong></Td>
+                                    <Tr bg="gray.50">
+                                        <Td fontSize="sm" color="neutral.600" py={4}><strong>{reservations.length} Rezervasyon</strong></Td>
                                         <Td></Td><Td></Td>
-                                        <Td fontSize="14px" textAlign="center">{totalPax} / {totalCocuk} / {totalBebek}</Td>
-                                        <Td fontSize="14px" textAlign="center">{totalGeceleme}</Td>
-                                        <Td fontSize="14px" textAlign="center">{totalUcret.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</Td>
+                                        <Td fontSize="sm" textAlign="center" color="neutral.600">{totalPax} / {totalCocuk} / {totalBebek}</Td>
+                                        <Td fontSize="sm" textAlign="center" color="neutral.600">{totalGeceleme}</Td>
+                                        <Td fontSize="sm" textAlign="center" fontWeight="bold" color="brand.700">{totalUcret.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</Td>
                                     </Tr>
                                 }
                             />
 
                             {totalPages > 1 && (
-                                <Box display="flex" justifyContent="center" alignItems="center" py={4}>
-                                    <ButtonGroup size="sm" isAttached>
-                                        <Button onClick={() => handlePageChange(currentPage - 1)} isDisabled={currentPage === 1}>Önceki</Button>
+                                <Box display="flex" justifyContent="center" alignItems="center" py={6} borderTop="1px solid" borderColor="neutral.100">
+                                    <ButtonGroup size="sm" isAttached variant="outline">
+                                        <Button onClick={() => handlePageChange(currentPage - 1)} isDisabled={currentPage === 1} borderRadius="lg">Önceki</Button>
                                         {getPageNumbers().map((page, idx) => {
                                             if (page === "...") return <Button key={idx} variant="ghost" isDisabled>...</Button>;
                                             return (
@@ -227,13 +286,13 @@ export default function ReservationsPage() {
                                                     key={idx}
                                                     onClick={() => handlePageChange(Number(page))}
                                                     variant={currentPage === page ? "solid" : "outline"}
-                                                    colorScheme={currentPage === page ? "blue" : "gray"}
+                                                    colorScheme={currentPage === page ? "brand" : "gray"}
                                                 >
                                                     {page}
                                                 </Button>
                                             );
                                         })}
-                                        <Button onClick={() => handlePageChange(currentPage + 1)} isDisabled={currentPage === totalPages}>Sonraki</Button>
+                                        <Button onClick={() => handlePageChange(currentPage + 1)} isDisabled={currentPage === totalPages} borderRadius="lg">Sonraki</Button>
                                     </ButtonGroup>
                                 </Box>
                             )}

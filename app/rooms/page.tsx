@@ -60,19 +60,26 @@ export default function RoomsPage() {
     }
 
     return (
-        <Box minH="90vh" display="flex" flexDirection="column">
+        <Box minH="90vh" display="flex" flexDirection="column" p={8} bg="gray.50">
             {/* Header */}
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={8}>
                 <Box>
-                    <Text fontSize="lg" fontWeight="medium">Oda Takvimi</Text>
-                    <Text fontSize="sm" color="#6c757d" mb={6}>
-                        Rezervasyonları görüntüleyin ve yönetin
+                    <Text fontSize="3xl" fontWeight="bold" color="neutral.900" letterSpacing="tight">Oda Takvimi</Text>
+                    <Text fontSize="md" color="neutral.500" mt={2}>
+                        Oda doluluk oranlarını ve rezervasyonları takip edin
                     </Text>
                 </Box>
                 <Select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(Number(e.target.value))}
                     width="120px"
+                    variant="filled"
+                    bg="white"
+                    borderRadius="xl"
+                    fontWeight="semibold"
+                    color="neutral.700"
+                    _hover={{ bg: "white", shadow: "sm" }}
+                    _focus={{ bg: "white", shadow: "md", borderColor: "brand.500" }}
                 >
                     {years.map(year => (
                         <option key={year} value={year}>{year}</option>
@@ -81,22 +88,35 @@ export default function RoomsPage() {
             </Box>
 
             {/* Tabs */}
-            <Tabs variant="soft-rounded" colorScheme="blue">
-                <TabList mb={6} gap={2} flexWrap="wrap">
+            <Tabs variant="unstyled" colorScheme="brand">
+                <TabList
+                    mb={8}
+                    bg="white"
+                    p={1.5}
+                    borderRadius="2xl"
+                    width="fit-content"
+                    boxShadow="sm"
+                    border="1px solid"
+                    borderColor="neutral.100"
+                >
                     {months.map((month) => (
                         <Tab
                             key={month.name}
                             _selected={{
-                                bg: "blue.500",
+                                bg: "brand.500",
                                 color: "white",
-                                boxShadow: "md"
+                                shadow: "md"
                             }}
                             _hover={{
-                                bg: "blue.50"
+                                color: "brand.600"
                             }}
+                            color="neutral.500"
                             fontWeight="semibold"
+                            fontSize="sm"
                             px={6}
-                            py={2}
+                            py={2.5}
+                            borderRadius="xl"
+                            transition="all 0.2s ease-in-out"
                         >
                             {month.name}
                         </Tab>

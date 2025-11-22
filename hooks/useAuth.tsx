@@ -2,14 +2,11 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-
-interface User {
-  email: string;
-}
+import { findUserByEmail, User } from "../services/userService";
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string) => void;
+  login: (email: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -27,11 +24,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (email: string) => {
-    const newUser = { email };
-    setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser));
-    router.push("/dashboard");
+  const login = async (email: string) => {
+    try {
+      // E-posta adresini tüm otel koleksiyonlarında ara
+      const foundUser = await findUserByEmail(email);
+
+      if (foundUser) {
+        setUser(foundUser);
+        localStorage.setItem("user", JSON.stringify(foundUser));
+        router.push("/dashboard");
+      } else {
+        console.error("Kullanıcı sistemde bulunamadı!");
+        alert("Kullanıcı sistemde bulunamadı! Lütfen e-posta adresinizi kontrol edin.");
+      }
+    } catch (error) {
+      console.error("Giriş işlemi sırasında hata oluştu:", error);
+      alert("Giriş işlemi sırasında bir hata oluştu.");
+    }
   };
 
   const logout = () => {

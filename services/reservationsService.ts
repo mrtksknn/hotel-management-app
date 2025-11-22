@@ -1,5 +1,5 @@
 import { db } from "../lib/firebaseClient";
-import { addDoc, collection, getDocs, Timestamp } from "firebase/firestore";
+import { addDoc, collection, getDocs, Timestamp, updateDoc, doc, query, where } from "firebase/firestore";
 import { blockRoomDates } from "./roomsService";
 
 export interface ReservationData {
@@ -14,10 +14,14 @@ export interface ReservationData {
     ucret: string;
     tur: string;
     room_code?: string | null;
+    hotel?: string;
 }
 
-export const getReservationsByYear = async (year: number) => {
-    const snapshot = await getDocs(collection(db, "reservations"));
+export const getReservationsByYear = async (year: number, hotelName?: string) => {
+    // Tüm rezervasyonları çek (Firestore index sorunu yaşamamak ve esnek filtreleme için)
+    const reservationsRef = collection(db, "reservations");
+    const snapshot = await getDocs(reservationsRef);
+
     const reservations = snapshot.docs.map(docSnap => {
         const data = docSnap.data();
 
@@ -41,13 +45,23 @@ export const getReservationsByYear = async (year: number) => {
             bebek_sayisi: data.bebek_sayisi || 0,
             ucret: data.ucret || "₺0.00",
             tur: data.tur || "Normal",
-            room_code: data.room_code ? String(data.room_code) : null
+            room_code: data.room_code ? String(data.room_code) : null,
+            hotel: data.hotel || null
         };
     });
 
-    return reservations.filter(
-        r => new Date(r.baslangic_tarihi).getFullYear() === year
-    );
+    // JS tarafında filtreleme
+    return reservations.filter(r => {
+        const yearMatch = new Date(r.baslangic_tarihi).getFullYear() === year;
+
+        // Otel eşleşmesi (Büyük/küçük harf duyarsız)
+        // Eğer hotelName parametresi yoksa hepsini getir (veya filtreleme)
+        const hotelMatch = hotelName
+            ? r.hotel?.toLowerCase().trim() === hotelName.toLowerCase().trim()
+            : true;
+
+        return yearMatch && hotelMatch;
+    });
 };
 
 export const addReservation = async (reservation: Omit<ReservationData, "id">) => {
@@ -73,6 +87,7 @@ export const addReservation = async (reservation: Omit<ReservationData, "id">) =
         throw error;
     }
 };
+
 export const summarizeByTur = (reservations: ReservationData[]) => {
     const parseUcret = (ucretStr: string): number => {
         if (!ucretStr) return 0;

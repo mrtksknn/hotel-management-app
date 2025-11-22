@@ -52,10 +52,20 @@ export const getAvailableRooms = async (start: Date, end: Date): Promise<Room[]>
     const resSnap = await getDocs(collection(db, "reservations"));
     const reservations = resSnap.docs.map(doc => {
         const data = doc.data();
+
+        // Güvenli tarih dönüşümü
+        const safeToDate = (field: any): Date => {
+            if (!field) return new Date(0); // Geçersiz tarih
+            if (field.toDate && typeof field.toDate === 'function') return field.toDate(); // Firestore Timestamp
+            if (field instanceof Date) return field; // Zaten Date
+            if (typeof field === 'string') return new Date(field); // String
+            return new Date(0);
+        };
+
         return {
             room_no: Number(data.room_code),
-            start: data.baslangic_tarihi.toDate(),
-            end: data.bitis_tarihi.toDate()
+            start: safeToDate(data.baslangic_tarihi),
+            end: safeToDate(data.bitis_tarihi)
         };
     });
 
@@ -94,6 +104,4 @@ export const blockRoomDates = async (
             end: Timestamp.fromDate(end)
         })
     });
-
-    console.log("blockedDates güncellendi → Oda:", roomNo);
 };

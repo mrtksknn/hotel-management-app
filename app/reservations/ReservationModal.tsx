@@ -27,6 +27,7 @@ import { useState, useEffect } from "react";
 import { addReservation } from "../../services/reservationsService";
 import { getAvailableRooms } from "../../services/roomsService";
 import { Room } from "@/app/rooms/types";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Props {
     isOpen: boolean;
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export default function ReservationModal({ isOpen, onClose }: Props) {
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
         isim: "",
         giris_tarihi: "",
@@ -126,6 +128,7 @@ export default function ReservationModal({ isOpen, onClose }: Props) {
             ucret: formData.ucret,
             tur: formData.tur,
             room_code: formData.room_code,
+            hotel: user?.hotel || "Keskin Prestij", // Kullanıcı oteli veya varsayılan
         });
 
         resetForm();

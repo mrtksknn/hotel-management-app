@@ -8,14 +8,18 @@ import {
 } from "@chakra-ui/react";
 import CustomButton from "@/components/common/CustomButton";
 import DynamicTable from "@/components/common/DynamicTable";
+import StatCard from "@/components/common/StatCard";
 import { getReservationsByYear, ReservationData, summarizeByTur } from "../../services/reservationsService";
 import ReservationModal from "./ReservationModal";
 import { calculateGeceleme, formatDate, getDateColors, parseUcret, getTurColor } from "./utils";
 import { Users, Moon, Wallet, Calendar } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ReservationsPage() {
     if (typeof window === "undefined") return null;
 
+    const { user } = useAuth();
+    const isOwner = user?.role === "owner";
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState(currentYear);
     const [summaryByTur, setSummaryByTur] = useState<Record<string, { totalGeceleme: number; totalUcret: number }>>({});
@@ -28,7 +32,9 @@ export default function ReservationsPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const data = await getReservationsByYear(selectedYear);
+            const hotelToFilter = user?.hotel;
+
+            const data = await getReservationsByYear(selectedYear, hotelToFilter);
             const sortedData = data.sort((a, b) =>
                 a.isim.localeCompare(b.isim, "tr", { sensitivity: "base" })
             );
@@ -41,8 +47,14 @@ export default function ReservationsPage() {
         }
     };
 
-    useEffect(() => { fetchData(); }, []);
-    useEffect(() => { fetchData(); setCurrentPage(1); }, [selectedYear]);
+    useEffect(() => {
+        fetchData();
+    }, [user, selectedYear]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedYear]);
+
 
     const handlePageChange = (page: number) => {
         const totalPages = Math.ceil(reservations.length / itemsPerPage);
@@ -74,59 +86,23 @@ export default function ReservationsPage() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = reservations.slice(startIndex, startIndex + itemsPerPage);
 
-    // Minimal İstatistik Kartı
-    const StatCard = ({ title, value, subValue, icon, colorScheme }: any) => (
-        <Box
-            p={5}
-            borderRadius="xl"
-            bg="white"
-            border="1px solid"
-            borderColor="neutral.100"
-            boxShadow="sm"
-            transition="all 0.2s"
-            _hover={{ transform: "translateY(-2px)", boxShadow: "soft" }}
-            display="flex"
-            alignItems="center"
-            gap={4}
-        >
-            <Box
-                p={3}
-                borderRadius="lg"
-                bg={`${colorScheme}.50`}
-                color={`${colorScheme}.500`}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-            >
-                <Icon as={icon} boxSize={6} />
-            </Box>
-            <Box>
-                <Text fontSize="xs" fontWeight="medium" color="neutral.500" textTransform="uppercase" letterSpacing="wide">
-                    {title}
-                </Text>
-                <Box>
-                    <Text fontSize="lg" fontWeight="bold" color="neutral.800">
-                        {value}
-                    </Text>
-                    <Text fontSize="xs" color="neutral.400">
-                        {subValue}
-                    </Text>
-                </Box>
-            </Box>
-        </Box>
-    );
+    const cardCount = Object.keys(summaryByTur).length;
+    let variant: 'normal' | 'compact' | 'veryCompact' = 'normal';
+    if (cardCount > 5) variant = 'veryCompact';
+    else if (cardCount > 3) variant = 'compact';
 
     return (
-        <Box minH="90vh" display="flex" flexDirection="column" p={8} bg="gray.50">
+        <Box h="100vh" display="flex" flexDirection="column" p={6} bg="gray.50" overflow="hidden">
             {/* Header */}
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={8}>
+            <Box flex="0 0 auto" display="flex" alignItems="center" justifyContent="space-between" mb={6}>
                 <Box>
-                    <Text fontSize="3xl" fontWeight="bold" color="neutral.900" letterSpacing="tight">Rezervasyon Yönetimi</Text>
+                    <Text fontSize="2xl" fontWeight="bold" color="neutral.900" letterSpacing="tight">Rezervasyon Yönetimi</Text>
                     <Text fontSize="md" color="neutral.500" mt={2}>
                         Tüm rezervasyon ve misafir bilgilerini buradan görüntüleyebilirsiniz.
                     </Text>
                 </Box>
                 <Box display="flex" gap={3} alignItems="center">
+
                     <Select
                         width="120px"
                         value={selectedYear}
@@ -160,35 +136,50 @@ export default function ReservationsPage() {
             </Box>
 
             {Object.keys(summaryByTur).length > 0 && (
-                <SimpleGrid
-                    columns={{ base: 1, md: 2, lg: 4 }}
-                    spacing={6}
-                    mb={8}
-                >
-                    {Object.entries(summaryByTur).map(([tur, values]) => {
-                        const colorScheme = getTurColor(tur);
-                        return (
-                            <StatCard
-                                key={tur}
-                                title={tur}
-                                value={`${values.totalUcret.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} ₺`}
-                                subValue={`${values.totalGeceleme} Geceleme`}
-                                icon={Wallet}
-                                colorScheme={colorScheme}
-                            />
-                        );
-                    })}
-                </SimpleGrid>
+                <Box flex="0 0 auto" mb={6}>
+                    <SimpleGrid
+                        minChildWidth={960 / Object.keys(summaryByTur).length}
+                        spacing={4}
+                    >
+                        {Object.entries(summaryByTur).map(([tur, values]) => {
+                            const colorScheme = getTurColor(tur);
+                            return (
+                                <StatCard
+                                    key={tur}
+                                    title={tur}
+                                    value={isOwner
+                                        ? `${values.totalUcret.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} ₺`
+                                        : `${values.totalGeceleme} Geceleme`
+                                    }
+                                    subValue={isOwner
+                                        ? `${values.totalGeceleme} Geceleme`
+                                        : ""
+                                    }
+                                    icon={Wallet}
+                                    colorScheme={colorScheme}
+                                    variant={variant}
+                                />
+                            );
+                        })}
+                    </SimpleGrid>
+                </Box>
             )}
 
-            <SimpleGrid columns={{ base: 1, md: 1 }} spacing={4}>
+            <Box flex="1" minH={0} display="flex" flexDirection="column">
                 <Box
+                    flex="1"
+                    overflowY="auto"
                     border="1px solid"
                     borderColor="neutral.100"
                     borderRadius="2xl"
-                    overflowX="auto"
                     bg="white"
                     boxShadow="soft"
+                    css={{
+                        "&::-webkit-scrollbar": { width: "6px", height: "6px" },
+                        "&::-webkit-scrollbar-track": { background: "transparent" },
+                        "&::-webkit-scrollbar-thumb": { background: "#CBD5E0", borderRadius: "4px" },
+                        "&::-webkit-scrollbar-thumb:hover": { background: "#A0AEC0" },
+                    }}
                 >
                     {loading ? (
                         <Box textAlign="center" p={10}><Spinner size="lg" color="brand.500" thickness="3px" /><Text mt={4} color="neutral.500" fontWeight="medium">Veriler yükleniyor...</Text></Box>
@@ -200,7 +191,7 @@ export default function ReservationsPage() {
                                         header: "MİSAFİR",
                                         render: (res) => (
                                             <Box>
-                                                <Text fontWeight="semibold" color="neutral.800">{res.isim}</Text>
+                                                <Text fontWeight="semibold" textTransform="capitalize" color="neutral.800">{res.isim}</Text>
                                                 {res.room_code && (
                                                     <Flex align="center" gap={1} mt={1}>
                                                         <Badge size="sm" colorScheme="gray" variant="subtle" borderRadius="md">
@@ -270,13 +261,18 @@ export default function ReservationsPage() {
                                         <Td></Td><Td></Td>
                                         <Td fontSize="sm" textAlign="center" color="neutral.600">{totalPax} / {totalCocuk} / {totalBebek}</Td>
                                         <Td fontSize="sm" textAlign="center" color="neutral.600">{totalGeceleme}</Td>
-                                        <Td fontSize="sm" textAlign="center" fontWeight="bold" color="brand.700">{totalUcret.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</Td>
+                                        <Td fontSize="sm" textAlign="center" fontWeight="bold" color="brand.700">
+                                            {isOwner
+                                                ? `${totalUcret.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`
+                                                : "-"
+                                            }
+                                        </Td>
                                     </Tr>
                                 }
                             />
 
                             {totalPages > 1 && (
-                                <Box display="flex" justifyContent="center" alignItems="center" py={6} borderTop="1px solid" borderColor="neutral.100">
+                                <Box display="flex" justifyContent="center" alignItems="center" py={4} borderTop="1px solid" borderColor="neutral.100">
                                     <ButtonGroup size="sm" isAttached variant="outline">
                                         <Button onClick={() => handlePageChange(currentPage - 1)} isDisabled={currentPage === 1} borderRadius="lg">Önceki</Button>
                                         {getPageNumbers().map((page, idx) => {
@@ -299,7 +295,7 @@ export default function ReservationsPage() {
                         </>
                     )}
                 </Box>
-            </SimpleGrid>
+            </Box>
 
             <ReservationModal
                 isOpen={isOpen}

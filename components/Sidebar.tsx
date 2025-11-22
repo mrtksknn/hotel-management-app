@@ -77,11 +77,11 @@ export default function Sidebar() {
 
     // 🔹 Menü öğeleri (rol bazlı kontrol burada yapılacak)
     const menuItems = [
-        { label: "Anasayfa", path: "/dashboard", roles: ["owner", "user", "employee"] },
-        { label: "Rezervasyonlar", path: "/reservations", roles: ["owner", "user", "employee"] },
-        { label: "Odalar", path: "/rooms", roles: ["owner", "user", "employee"] },
-        { label: "Oda Durumu", path: "/status", roles: ["owner", "user", "employee"] },
-        { label: "Giriş-Çıkış", path: "/checkinout", roles: ["owner", "user", "employee"] },
+        { label: "Anasayfa", path: "/dashboard", roles: ["owner", "manager", "user", "employee"] },
+        { label: "Rezervasyonlar", path: "/reservations", roles: ["owner", "manager", "user", "employee"] },
+        { label: "Odalar", path: "/rooms", roles: ["owner", "manager", "user", "employee"] },
+        { label: "Oda Durumu", path: "/status", roles: ["owner", "manager", "user", "employee"] },
+        { label: "Giriş-Çıkış", path: "/checkinout", roles: ["owner", "manager", "user", "employee"] },
         { label: "Kullanıcılar", path: "/users", roles: ["owner"] },
     ];
 

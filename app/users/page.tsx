@@ -32,6 +32,8 @@ import {
 } from "@/services/userService";
 import { CustomButton } from "@/components";
 import DynamicTable from "@/components/common/DynamicTable";
+import StatCard from "@/components/common/StatCard";
+import { Users, UserCheck, ShieldCheck, Home } from "lucide-react";
 
 export default function UsersPage() {
     const [stats, setStats] = useState<any>(null);
@@ -149,11 +151,16 @@ export default function UsersPage() {
     if (loading) return <Spinner size="lg" color="blue.500" />;
 
     const statsArray = [
-        { title: "Total Staffs", count: stats?.totalStaffs || 0 },
-        { title: "Managers", count: stats?.managers || 0 },
-        { title: "Receptionists", count: stats?.receptionists || 0 },
-        { title: "Housekeepers", count: stats?.housekeepers || 0 },
+        { title: "Total Staffs", count: stats?.totalStaffs || 0, icon: Users, color: "blue" },
+        { title: "Managers", count: stats?.managers || 0, icon: ShieldCheck, color: "purple" },
+        { title: "Receptionists", count: stats?.receptionists || 0, icon: UserCheck, color: "green" },
+        { title: "Housekeepers", count: stats?.housekeepers || 0, icon: Home, color: "orange" },
     ];
+
+    const cardCount = statsArray.length;
+    let variant: 'normal' | 'compact' | 'veryCompact' = 'normal';
+    if (cardCount > 5) variant = 'veryCompact';
+    else if (cardCount > 3) variant = 'compact';
 
     return (
         <Box minH="90vh" display="flex" flexDirection="column" p={6}>
@@ -172,24 +179,21 @@ export default function UsersPage() {
             </Box>
 
             {/* İstatistikler */}
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={4} mb={6}>
+            <SimpleGrid
+                minChildWidth={960 / cardCount}
+                spacing={4}
+                mb={6}
+            >
                 {statsArray.map((stat) => (
-                    <Card
+                    <StatCard
                         key={stat.title}
-                        borderRadius="xl"
-                        borderColor="neutral.200"
-                        borderWidth="1px"
-                        p={5}
-                        bg="white"
-                        boxShadow="sm"
-                        transition="all 0.2s ease-in-out"
-                        _hover={{ boxShadow: "md", transform: "translateY(-2px)" }}
-                    >
-                        <Text fontSize="sm" fontWeight="medium" color="neutral.600" mb={2}>
-                            {stat.title}
-                        </Text>
-                        <Text fontSize="2xl" fontWeight="bold" color="brand.600">{stat.count}</Text>
-                    </Card>
+                        title={stat.title}
+                        value={stat.count.toString()}
+                        subValue="Personel"
+                        icon={stat.icon}
+                        colorScheme={stat.color}
+                        variant={variant}
+                    />
                 ))}
             </SimpleGrid>
 

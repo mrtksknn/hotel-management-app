@@ -108,3 +108,22 @@ export async function deleteUserFromFirestore(userId: string) {
     const userRef = doc(db, "users", userId);
     await deleteDoc(userRef);
 }
+
+// 🔹 E-posta adresine göre kullanıcıyı ara
+export async function findUserByEmail(email: string): Promise<User | null> {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", email));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+        const docData = snapshot.docs[0].data();
+        return {
+            id: snapshot.docs[0].id,
+            name: docData.name,
+            email: docData.email,
+            role: docData.role,
+            hotel: docData.hotel
+        } as User;
+    }
+    return null;
+}

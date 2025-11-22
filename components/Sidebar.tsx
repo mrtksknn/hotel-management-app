@@ -21,7 +21,7 @@ export default function Sidebar() {
     const { logout } = useAuth();
     const [gray] = useToken("colors", ["gray"]);
 
-    const [userData, setUserData] = useState<{ name: string; email: string; role: string } | null>(null);
+    const [userData, setUserData] = useState<{ name: string; email: string; role: string; hotel: string } | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -50,6 +50,7 @@ export default function Sidebar() {
                         name: string;
                         email: string;
                         role: string;
+                        hotel: string;
                     };
                     setUserData(data);
                 }
@@ -121,11 +122,11 @@ export default function Sidebar() {
                         fontSize="md"
                         boxShadow="soft"
                     >
-                        GH
+                        {getInitials(userData?.hotel)}
                     </Box>
                     <Box>
                         <Text fontSize="md" fontWeight="semibold" color="neutral.800">
-                            Grand Hotel
+                            {userData?.hotel}
                         </Text>
                         <Text fontSize="xs" color="neutral.500">
                             Management System

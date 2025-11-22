@@ -43,6 +43,7 @@ export default function UsersPage() {
         email: "",
         password: "",
         role: "staff",
+        hotel: "",
     });
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -77,7 +78,7 @@ export default function UsersPage() {
     // 🔹 Yeni kullanıcı ekle
     const handleAddUser = async () => {
         try {
-            await addUser(form.name, form.email, form.password, form.role);
+            await addUser(form.name, form.email, form.password, form.role, form.hotel);
             toast({ title: "Kullanıcı eklendi", status: "success" });
             refreshUsers();
             onClose();
@@ -98,6 +99,7 @@ export default function UsersPage() {
             await updateUser(selectedUser.id, {
                 name: form.name,
                 role: form.role,
+                hotel: form.hotel,
             });
 
             toast({ title: "Kullanıcı bilgileri güncellendi", status: "info" });
@@ -131,6 +133,7 @@ export default function UsersPage() {
             email: user.email,
             password: "",
             role: user.role,
+            hotel: user.hotel || "",
         });
         setMode("edit");
         onOpen();
@@ -138,7 +141,7 @@ export default function UsersPage() {
 
     const openAddModal = () => {
         setSelectedUser(null);
-        setForm({ name: "", email: "", password: "", role: "staff" });
+        setForm({ name: "", email: "", password: "", role: "staff", hotel: "" });
         setMode("add");
         onOpen();
     };
@@ -206,6 +209,7 @@ export default function UsersPage() {
                             accessor: "role",
                             render: (user) => <Text textTransform="capitalize">{user.role}</Text>
                         },
+                        { header: "Otel", accessor: "hotel" },
                         {
                             header: "İşlemler",
                             render: (user) => (
@@ -275,6 +279,11 @@ export default function UsersPage() {
                             <option value="housekeeper">Housekeeper</option>
                             <option value="staff">Staff</option>
                         </Select>
+                        <Input
+                            placeholder="Otel Adı"
+                            value={form.hotel}
+                            onChange={(e) => setForm({ ...form, hotel: e.target.value })}
+                        />
                     </ModalBody>
 
                     <ModalFooter display="flex" gap={2}>

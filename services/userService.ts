@@ -9,6 +9,7 @@ export interface User {
     name: string;
     email: string;
     role: string;
+    hotel?: string;
 }
 
 // 🔹 Kullanıcı istatistiklerini getir
@@ -38,14 +39,14 @@ export async function getUsersList(): Promise<User[]> {
 }
 
 // 🔹 Yeni kullanıcı ekle (Auth + Firestore)
-export async function addUser(name: string, email: string, password: string, role: string) {
+export async function addUser(name: string, email: string, password: string, role: string, hotel: string) {
     try {
         // 1️⃣ Auth'a ekle
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const uid = userCredential.user.uid;
 
         // 2️⃣ Firestore'a aynı UID ile kaydet
-        const userData: User = { id: uid, name, email, role };
+        const userData: User = { id: uid, name, email, role, hotel };
         await setDoc(doc(db, "users", uid), userData);
 
         return userData;

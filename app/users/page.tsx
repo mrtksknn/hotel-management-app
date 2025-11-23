@@ -33,7 +33,7 @@ import {
 import { CustomButton } from "@/components";
 import DynamicTable from "@/components/common/DynamicTable";
 import StatCard from "@/components/common/StatCard";
-import { Users, UserCheck, ShieldCheck, Home } from "lucide-react";
+import { getStatsArray } from "./utils";
 
 export default function UsersPage() {
     const [stats, setStats] = useState<any>(null);
@@ -150,12 +150,7 @@ export default function UsersPage() {
 
     if (loading) return <Spinner size="lg" color="blue.500" />;
 
-    const statsArray = [
-        { title: "Total Staffs", count: stats?.totalStaffs || 0, icon: Users, color: "blue" },
-        { title: "Managers", count: stats?.managers || 0, icon: ShieldCheck, color: "purple" },
-        { title: "Receptionists", count: stats?.receptionists || 0, icon: UserCheck, color: "green" },
-        { title: "Housekeepers", count: stats?.housekeepers || 0, icon: Home, color: "orange" },
-    ];
+    const statsArray = getStatsArray(stats);
 
     const cardCount = statsArray.length;
     let variant: 'normal' | 'compact' | 'veryCompact' = 'normal';

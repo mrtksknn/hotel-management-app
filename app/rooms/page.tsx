@@ -64,7 +64,7 @@ export default function RoomsPage() {
             {/* Header */}
             <Box display="flex" alignItems="center" justifyContent="space-between" mb={8}>
                 <Box>
-                    <Text fontSize="3xl" fontWeight="bold" color="neutral.900" letterSpacing="tight">Oda Takvimi</Text>
+                    <Text fontSize="2xl" fontWeight="semibold" color="neutral.800">Oda Takvimi</Text>
                     <Text fontSize="md" color="neutral.500" mt={2}>
                         Oda doluluk oranlarını ve rezervasyonları takip edin
                     </Text>

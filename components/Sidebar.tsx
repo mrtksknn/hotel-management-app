@@ -11,13 +11,14 @@ import {
     useToken,
     Spinner,
 } from "@chakra-ui/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { db } from "@/lib/firebaseClient";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { LogOut } from "lucide-react";
 
 export default function Sidebar() {
     const router = useRouter();
+    const pathname = usePathname();
     const { logout } = useAuth();
     const [gray] = useToken("colors", ["gray"]);
 
@@ -141,27 +142,31 @@ export default function Sidebar() {
                             .filter((item) =>
                                 userData ? item.roles.includes(userData.role) : false
                             )
-                            .map((item) => (
-                                <Box
-                                    key={item.path}
-                                    px={4}
-                                    py={3}
-                                    cursor="pointer"
-                                    borderRadius="lg"
-                                    fontSize="sm"
-                                    fontWeight="medium"
-                                    color="neutral.700"
-                                    transition="all 0.2s ease-in-out"
-                                    _hover={{
-                                        bg: "brand.50",
-                                        color: "brand.600",
-                                        transform: "translateX(4px)"
-                                    }}
-                                    onClick={() => router.push(item.path)}
-                                >
-                                    {item.label}
-                                </Box>
-                            ))}
+                            .map((item) => {
+                                const isActive = pathname === item.path;
+                                return (
+                                    <Box
+                                        key={item.path}
+                                        px={4}
+                                        py={3}
+                                        cursor="pointer"
+                                        borderRadius="lg"
+                                        fontSize="sm"
+                                        fontWeight="medium"
+                                        color={isActive ? "brand.600" : "neutral.700"}
+                                        bg={isActive ? "brand.50" : "transparent"}
+                                        transition="all 0.2s ease-in-out"
+                                        _hover={{
+                                            bg: "brand.50",
+                                            color: "brand.600",
+                                            transform: "translateX(4px)"
+                                        }}
+                                        onClick={() => router.push(item.path)}
+                                    >
+                                        {item.label}
+                                    </Box>
+                                );
+                            })}
                     </Stack>
                 </Box>
             </Stack>

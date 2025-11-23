@@ -96,7 +96,7 @@ export default function ReservationsPage() {
             {/* Header */}
             <Box flex="0 0 auto" display="flex" alignItems="center" justifyContent="space-between" mb={6}>
                 <Box>
-                    <Text fontSize="2xl" fontWeight="bold" color="neutral.900" letterSpacing="tight">Rezervasyon Yönetimi</Text>
+                    <Text fontSize="2xl" fontWeight="semibold" color="neutral.800">Rezervasyon Yönetimi</Text>
                     <Text fontSize="md" color="neutral.500" mt={2}>
                         Tüm rezervasyon ve misafir bilgilerini buradan görüntüleyebilirsiniz.
                     </Text>

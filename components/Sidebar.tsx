@@ -6,7 +6,6 @@ import {
     Stack,
     Text,
     Box,
-    Divider,
     Button,
     useToken,
     Spinner,
@@ -83,6 +82,8 @@ export default function Sidebar() {
         { label: "Odalar", path: "/rooms", roles: ["owner", "manager", "user", "employee"] },
         { label: "Oda Durumu", path: "/status", roles: ["owner", "manager", "user", "employee"] },
         { label: "Giriş-Çıkış", path: "/checkinout", roles: ["owner", "manager", "user", "employee"] },
+        { label: "Firma Ödemeleri", path: "/vendors", roles: ["owner", "manager"] },
+        { label: "Turlar ve Fiyatlar", path: "/tours", roles: ["owner", "manager"] },
         { label: "Kullanıcılar", path: "/users", roles: ["owner"] },
     ];
 

@@ -34,8 +34,10 @@ import { CustomButton } from "@/components";
 import DynamicTable from "@/components/common/DynamicTable";
 import StatCard from "@/components/common/StatCard";
 import { getStatsArray } from "./utils";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function UsersPage() {
+    const { user } = useAuth();
     const [stats, setStats] = useState<any>(null);
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
@@ -52,16 +54,21 @@ export default function UsersPage() {
     const [mode, setMode] = useState<"add" | "edit">("add");
 
     const loadUsers = async () => {
-        const data = await getUsersList();
+        const data = await getUsersList(user?.hotel);
         setUsers(data);
     };
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!user?.hotel) {
+                setLoading(false);
+                return;
+            }
+
             try {
-                const userStats = await getUsersStats();
+                const userStats = await getUsersStats(user.hotel);
                 setStats(userStats);
-                const usersData = await getUsersList();
+                const usersData = await getUsersList(user.hotel);
                 setUsers(usersData);
             } catch (error) {
                 console.error("Kullanıcı verileri alınamadı:", error);
@@ -70,17 +77,22 @@ export default function UsersPage() {
             }
         };
         fetchData();
-    }, []);
+    }, [user]);
 
     const refreshUsers = async () => {
-        const list = await getUsersList();
+        const list = await getUsersList(user?.hotel);
         setUsers(list);
     };
 
     // 🔹 Yeni kullanıcı ekle
     const handleAddUser = async () => {
+        if (!user?.hotel) {
+            toast({ title: "Hotel bilgisi bulunamadı", status: "error" });
+            return;
+        }
+
         try {
-            await addUser(form.name, form.email, form.password, form.role, form.hotel);
+            await addUser(form.name, form.email, form.password, form.role, user.hotel);
             toast({ title: "Kullanıcı eklendi", status: "success" });
             refreshUsers();
             onClose();
@@ -278,11 +290,6 @@ export default function UsersPage() {
                             <option value="housekeeper">Housekeeper</option>
                             <option value="staff">Staff</option>
                         </Select>
-                        <Input
-                            placeholder="Otel Adı"
-                            value={form.hotel}
-                            onChange={(e) => setForm({ ...form, hotel: e.target.value })}
-                        />
                     </ModalBody>
 
                     <ModalFooter display="flex" gap={2}>

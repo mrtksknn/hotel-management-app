@@ -13,9 +13,15 @@ export interface User {
 }
 
 // 🔹 Kullanıcı istatistiklerini getir
-export async function getUsersStats() {
+export async function getUsersStats(hotel?: string) {
     const usersRef = collection(db, "users");
-    const snapshot = await getDocs(usersRef);
+
+    // Hotel parametresi varsa filtrele
+    const q = hotel
+        ? query(usersRef, where("hotel", "==", hotel))
+        : usersRef;
+
+    const snapshot = await getDocs(q);
     const users: User[] = snapshot.docs.map((doc) => doc.data() as User);
 
     const stats = {
@@ -29,9 +35,15 @@ export async function getUsersStats() {
 }
 
 // 🔹 Kullanıcı listesini getir
-export async function getUsersList(): Promise<User[]> {
+export async function getUsersList(hotel?: string): Promise<User[]> {
     const usersRef = collection(db, "users");
-    const snapshot = await getDocs(usersRef);
+
+    // Hotel parametresi varsa filtrele
+    const q = hotel
+        ? query(usersRef, where("hotel", "==", hotel))
+        : usersRef;
+
+    const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),

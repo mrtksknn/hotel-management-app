@@ -1,11 +1,17 @@
 import { db } from "../lib/firebaseClient";
-import { collection, getDocs, doc, updateDoc, arrayUnion, Timestamp } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, arrayUnion, Timestamp, addDoc, query, where } from "firebase/firestore";
 import { Room } from "../app/rooms/types";
 
-export const getRooms = async (): Promise<Room[]> => {
+export const getRooms = async (hotel?: string): Promise<Room[]> => {
     try {
         const roomsCollection = collection(db, "rooms");
-        const snapshot = await getDocs(roomsCollection);
+
+        // Hotel parametresi varsa filtrele
+        const q = hotel
+            ? query(roomsCollection, where("hotel", "==", hotel))
+            : roomsCollection;
+
+        const snapshot = await getDocs(q);
 
         let rooms: Room[] = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -35,6 +41,22 @@ export const getRooms = async (): Promise<Room[]> => {
     } catch (error) {
         console.error("Rooms fetch error:", error);
         return [];
+    }
+};
+
+export const addRoom = async (floor: number, no: number, hotel: string, code?: string): Promise<void> => {
+    try {
+        const roomsCollection = collection(db, "rooms");
+        await addDoc(roomsCollection, {
+            floor,
+            no,
+            kod: code || "",
+            hotel,
+            blockedDates: []
+        });
+    } catch (error) {
+        console.error("Error adding room:", error);
+        throw error;
     }
 };
 

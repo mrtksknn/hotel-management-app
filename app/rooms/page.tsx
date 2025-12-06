@@ -1,11 +1,14 @@
 "use client";
 
-import { Box, Text, Tabs, TabList, TabPanels, Tab, TabPanel, Select } from "@chakra-ui/react";
+import { Box, Text, Tabs, TabList, TabPanels, Tab, TabPanel, Select, useDisclosure, Button, Icon } from "@chakra-ui/react";
 import MonthGrid from "./MonthGrid";
 import { useEffect, useState } from "react";
 import { Room } from "./types";
 import { getReservationsByYear, ReservationData } from "@/services/reservationsService";
 import { getRooms } from "@/services/roomsService";
+import AddRoomModal from "./AddRoomModal";
+import { Plus } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface MonthInfo {
     name: string;
@@ -22,9 +25,11 @@ const months: MonthInfo[] = [
 ];
 
 export default function RoomsPage() {
+    const { user } = useAuth();
     const [rooms, setRooms] = useState<Room[]>([]);
     const [reservations, setReservations] = useState<ReservationData[]>([]);
     const [loading, setLoading] = useState(true);
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -36,18 +41,18 @@ export default function RoomsPage() {
 
     const today = { day: 12, month: "Temmuz" };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            const [roomsData, reservationsData] = await Promise.all([
-                getRooms(),
-                getReservationsByYear(selectedYear)
-            ]);
-            setRooms(roomsData);
-            setReservations(reservationsData);
-            setLoading(false);
-        };
+    const fetchData = async () => {
+        setLoading(true);
+        const [roomsData, reservationsData] = await Promise.all([
+            getRooms(user?.hotel),
+            getReservationsByYear(selectedYear)
+        ]);
+        setRooms(roomsData);
+        setReservations(reservationsData);
+        setLoading(false);
+    };
 
+    useEffect(() => {
         fetchData();
     }, [selectedYear]);
 
@@ -69,22 +74,34 @@ export default function RoomsPage() {
                         Oda doluluk oranlarını ve rezervasyonları takip edin
                     </Text>
                 </Box>
-                <Select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    width="120px"
-                    variant="filled"
-                    bg="white"
-                    borderRadius="xl"
-                    fontWeight="semibold"
-                    color="neutral.700"
-                    _hover={{ bg: "white", shadow: "sm" }}
-                    _focus={{ bg: "white", shadow: "md", borderColor: "brand.500" }}
-                >
-                    {years.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                    ))}
-                </Select>
+                <Box display="flex" gap={3} alignItems="center">
+                    <Select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(Number(e.target.value))}
+                        width="120px"
+                        variant="filled"
+                        bg="white"
+                        borderRadius="xl"
+                        fontWeight="semibold"
+                        color="neutral.700"
+                        _hover={{ bg: "white", shadow: "sm" }}
+                        _focus={{ bg: "white", shadow: "md", borderColor: "brand.500" }}
+                    >
+                        {years.map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
+                    </Select>
+                    <Button
+                        leftIcon={<Icon as={Plus} />}
+                        colorScheme="brand"
+                        onClick={onOpen}
+                        size="md"
+                        borderRadius="xl"
+                        fontWeight="semibold"
+                    >
+                        Yeni Oda Ekle
+                    </Button>
+                </Box>
             </Box>
 
             {/* Tabs */}
@@ -139,6 +156,13 @@ export default function RoomsPage() {
                     ))}
                 </TabPanels>
             </Tabs>
+
+            <AddRoomModal
+                isOpen={isOpen}
+                onClose={onClose}
+                onSuccess={fetchData}
+                hotelId={user?.hotel}
+            />
         </Box>
     );
 }

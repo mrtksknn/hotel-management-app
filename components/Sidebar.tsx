@@ -84,6 +84,7 @@ export default function Sidebar() {
         { label: "Giriş-Çıkış", path: "/checkinout", roles: ["owner", "manager", "user", "employee"] },
         { label: "Firma Ödemeleri", path: "/vendors", roles: ["owner", "manager"] },
         { label: "Turlar ve Fiyatlar", path: "/tours", roles: ["owner", "manager"] },
+        { label: "Oteller", path: "/oteller", roles: ["sistem-admin"] },
         { label: "Kullanıcılar", path: "/users", roles: ["owner"] },
     ];
 

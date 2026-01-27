@@ -22,6 +22,8 @@ export default function ReservationsPage() {
     const isOwner = user?.role === "owner";
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState(currentYear);
+    const [selectedTur, setSelectedTur] = useState<string | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
     const [summaryByTur, setSummaryByTur] = useState<Record<string, { totalGeceleme: number; totalUcret: number }>>({});
     const [reservations, setReservations] = useState<ReservationData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -53,22 +55,60 @@ export default function ReservationsPage() {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [selectedYear]);
+    }, [selectedYear, selectedTur]);
 
+
+    const filteredReservations = selectedTur
+        ? reservations.filter(res => res.tur === selectedTur)
+        : reservations;
+
+    const handleSort = (key: string) => {
+        let direction: "asc" | "desc" = "asc";
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+            direction = "desc";
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedReservations = [...filteredReservations].sort((a, b) => {
+        if (!sortConfig) return 0;
+        const { key, direction } = sortConfig;
+
+        let aValue: any = a[key as keyof ReservationData];
+        let bValue: any = b[key as keyof ReservationData];
+
+        if (key === 'geceleme') {
+            aValue = calculateGeceleme(a);
+            bValue = calculateGeceleme(b);
+        } else if (key === 'ucret') {
+            aValue = parseUcret(a.ucret);
+            bValue = parseUcret(b.ucret);
+        } else if (key === 'giris_tarihi') {
+            aValue = new Date(a.giris_tarihi).getTime();
+            bValue = new Date(b.giris_tarihi).getTime();
+        } else if (typeof aValue === 'string') {
+            aValue = aValue.toLowerCase();
+            bValue = bValue.toLowerCase();
+        }
+
+        if (aValue < bValue) return direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return direction === "asc" ? 1 : -1;
+        return 0;
+    });
 
     const handlePageChange = (page: number) => {
-        const totalPages = Math.ceil(reservations.length / itemsPerPage);
+        const totalPages = Math.ceil(sortedReservations.length / itemsPerPage);
         if (page >= 1 && page <= totalPages) setCurrentPage(page);
     };
 
-    const totalPax = reservations.reduce((sum, res) => sum + res.pax, 0);
-    const totalCocuk = reservations.reduce((sum, res) => sum + res.cocuk_sayisi, 0);
-    const totalBebek = reservations.reduce((sum, res) => sum + res.bebek_sayisi, 0);
-    const totalGeceleme = reservations.reduce((sum, res) => sum + calculateGeceleme(res), 0);
-    const totalUcret = reservations.reduce((sum, res) => sum + parseUcret(res.ucret), 0);
+    const totalPax = filteredReservations.reduce((sum, res) => sum + res.pax, 0);
+    const totalCocuk = filteredReservations.reduce((sum, res) => sum + res.cocuk_sayisi, 0);
+    const totalBebek = filteredReservations.reduce((sum, res) => sum + res.bebek_sayisi, 0);
+    const totalGeceleme = filteredReservations.reduce((sum, res) => sum + calculateGeceleme(res), 0);
+    const totalUcret = filteredReservations.reduce((sum, res) => sum + parseUcret(res.ucret), 0);
 
     const getPageNumbers = () => {
-        const totalPages = Math.ceil(reservations.length / itemsPerPage);
+        const totalPages = Math.ceil(sortedReservations.length / itemsPerPage);
         const pages: (number | string)[] = [];
         if (totalPages <= 5) for (let i = 1; i <= totalPages; i++) pages.push(i);
         else {
@@ -82,9 +122,9 @@ export default function ReservationsPage() {
     const years = [];
     for (let y = 2018; y <= currentYear; y++) years.push(y);
 
-    const totalPages = Math.ceil(reservations.length / itemsPerPage);
+    const totalPages = Math.ceil(sortedReservations.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentData = reservations.slice(startIndex, startIndex + itemsPerPage);
+    const currentData = sortedReservations.slice(startIndex, startIndex + itemsPerPage);
 
     const cardCount = Object.keys(summaryByTur).length;
     let variant: 'normal' | 'compact' | 'veryCompact' = 'normal';
@@ -143,22 +183,47 @@ export default function ReservationsPage() {
                     >
                         {Object.entries(summaryByTur).map(([tur, values]) => {
                             const colorScheme = getTurColor(tur);
+                            const isSelected = selectedTur === tur;
+                            const isDimmed = selectedTur !== null && !isSelected;
+
                             return (
-                                <StatCard
+                                <Box
                                     key={tur}
-                                    title={tur}
-                                    value={isOwner
-                                        ? `${values.totalUcret.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} ₺`
-                                        : `${values.totalGeceleme} Geceleme`
-                                    }
-                                    subValue={isOwner
-                                        ? `${values.totalGeceleme} Geceleme`
-                                        : ""
-                                    }
-                                    icon={Wallet}
-                                    colorScheme={colorScheme}
-                                    variant={variant}
-                                />
+                                    onClick={() => setSelectedTur(isSelected ? null : tur)}
+                                    cursor="pointer"
+                                    opacity={isDimmed ? 0.4 : 1}
+                                    transition="all 0.2s"
+                                    _hover={{ transform: "translateY(-2px)" }}
+                                    position="relative"
+                                >
+                                    {isSelected && (
+                                        <Box
+                                            position="absolute"
+                                            top="-4px"
+                                            left="-4px"
+                                            right="-4px"
+                                            bottom="-4px"
+                                            border="2px solid"
+                                            borderColor={`${colorScheme}.500`}
+                                            borderRadius="2xl"
+                                            pointerEvents="none"
+                                        />
+                                    )}
+                                    <StatCard
+                                        title={tur}
+                                        value={isOwner
+                                            ? `${values.totalUcret.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} ₺`
+                                            : `${values.totalGeceleme} Geceleme`
+                                        }
+                                        subValue={isOwner
+                                            ? `${values.totalGeceleme} Geceleme`
+                                            : ""
+                                        }
+                                        icon={Wallet}
+                                        colorScheme={colorScheme}
+                                        variant={variant}
+                                    />
+                                </Box>
                             );
                         })}
                     </SimpleGrid>
@@ -186,9 +251,13 @@ export default function ReservationsPage() {
                     ) : (
                         <>
                             <DynamicTable
+                                onSort={handleSort}
+                                sortConfig={sortConfig}
                                 columns={[
                                     {
                                         header: "MİSAFİR",
+                                        accessor: "isim",
+                                        sortable: true,
                                         render: (res) => (
                                             <Box>
                                                 <Text fontWeight="semibold" textTransform="capitalize" color="neutral.800">{res.isim}</Text>
@@ -205,6 +274,7 @@ export default function ReservationsPage() {
                                     {
                                         header: "TUR",
                                         accessor: "tur",
+                                        sortable: true,
                                         render: (res) => (
                                             <Badge colorScheme={getTurColor(res.tur)} variant="subtle" px={2.5} py={1} borderRadius="lg" textTransform="uppercase" letterSpacing="wide" fontSize="xs" fontWeight="bold">
                                                 {res.tur}
@@ -213,6 +283,8 @@ export default function ReservationsPage() {
                                     },
                                     {
                                         header: "TARİHLER",
+                                        sortable: true,
+                                        sortKey: "giris_tarihi",
                                         render: (res) => {
                                             const { bg, color } = getDateColors(res);
                                             return (
@@ -231,17 +303,21 @@ export default function ReservationsPage() {
                                     {
                                         header: "KİŞİ SAYISI",
                                         textAlign: "center",
+                                        sortable: true,
+                                        sortKey: "pax",
                                         render: (res) => (
                                             <Flex justify="center" gap={3} color="neutral.600" fontSize="sm">
                                                 <Flex align="center" gap={1} title="Yetişkin"><Icon as={Users} boxSize={3} /> {res.pax}</Flex>
-                                                {res.cocuk_sayisi > 0 && <Flex align="center" gap={1} title="Çocuk" color="neutral.500">+{res.cocuk_sayisi}</Flex>}
-                                                {res.bebek_sayisi > 0 && <Flex align="center" gap={1} title="Bebek" color="neutral.400">+{res.bebek_sayisi}B</Flex>}
+                                                {res.cocuk_sayisi > 0 && <Flex align="center" gap={1} title="Çocuk (7-12 Yaş)" color="neutral.400">+{res.cocuk_sayisi}Ç</Flex>}
+                                                {res.bebek_sayisi > 0 && <Flex align="center" gap={1} title="Bebek (0-7 Yaş)" color="neutral.400">+{res.bebek_sayisi}B</Flex>}
                                             </Flex>
                                         )
                                     },
                                     {
                                         header: "GECELEME",
                                         textAlign: "center",
+                                        sortable: true,
+                                        sortKey: "geceleme",
                                         render: (res) => (
                                             <Text fontWeight="medium" color="neutral.700">{calculateGeceleme(res)}</Text>
                                         )
@@ -249,6 +325,8 @@ export default function ReservationsPage() {
                                     {
                                         header: "ÜCRET",
                                         textAlign: "center",
+                                        sortable: true,
+                                        sortKey: "ucret",
                                         render: (res) => (
                                             <Text fontWeight="bold" color="brand.600">{res.ucret} ₺</Text>
                                         )
@@ -257,7 +335,7 @@ export default function ReservationsPage() {
                                 data={currentData}
                                 footer={
                                     <Tr bg="gray.50">
-                                        <Td fontSize="sm" color="neutral.600" py={4}><strong>{reservations.length} Rezervasyon</strong></Td>
+                                        <Td fontSize="sm" color="neutral.600" py={4}><strong>{filteredReservations.length} Rezervasyon</strong></Td>
                                         <Td></Td><Td></Td>
                                         <Td fontSize="sm" textAlign="center" color="neutral.600">{totalPax} / {totalCocuk} / {totalBebek}</Td>
                                         <Td fontSize="sm" textAlign="center" color="neutral.600">{totalGeceleme}</Td>

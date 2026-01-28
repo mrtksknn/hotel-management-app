@@ -71,6 +71,7 @@ export const deleteTourPrice = async (id: string) => {
     }
 };
 
+
 export const updateTourPrice = async (id: string, priceDef: Partial<TourPriceDefinition>) => {
     try {
         const dataToUpdate: any = { ...priceDef };
@@ -81,5 +82,16 @@ export const updateTourPrice = async (id: string, priceDef: Partial<TourPriceDef
     } catch (error) {
         console.error("Error updating tour price:", error);
         throw error;
+    }
+};
+
+export const getTourNames = async (hotel: string): Promise<string[]> => {
+    try {
+        const prices = await getTourPrices(hotel);
+        const names = new Set(prices.map(p => p.tourName));
+        return Array.from(names).sort();
+    } catch (error) {
+        console.error("Error fetching tour names:", error);
+        return [];
     }
 };

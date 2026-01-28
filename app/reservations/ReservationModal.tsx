@@ -26,6 +26,7 @@ import {
 import { useState, useEffect } from "react";
 import { addReservation } from "../../services/reservationsService";
 import { getAvailableRooms } from "../../services/roomsService";
+import { getTourNames } from "../../services/tourService";
 import { Room } from "@/app/rooms/types";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -51,6 +52,17 @@ export default function ReservationModal({ isOpen, onClose }: Props) {
 
     const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(false);
+    const [tourOptions, setTourOptions] = useState<string[]>([]);
+
+    useEffect(() => {
+        const fetchTours = async () => {
+            if (user?.hotel) {
+                const tours = await getTourNames(user.hotel);
+                setTourOptions(tours);
+            }
+        };
+        fetchTours();
+    }, [user?.hotel]);
 
     const resetForm = () => {
         setFormData({
@@ -195,12 +207,9 @@ export default function ReservationModal({ isOpen, onClose }: Props) {
                                     <FormLabel>Tur</FormLabel>
                                     <Select name="tur" value={formData.tur} onChange={handleChange}>
                                         <option value="Normal">Normal</option>
-                                        <option value="ETS">ETS</option>
-                                        <option value="TATİL.COM">TATİL.COM</option>
-                                        <option value="VALS TUR">VALS TUR</option>
-                                        <option value="ECC">ECC</option>
-                                        <option value="JOLLY">JOLLY</option>
-                                        <option value="GEZİNOMİ">GEZİNOMİ</option>
+                                        {tourOptions.filter(t => t !== "Normal").map((tour) => (
+                                            <option key={tour} value={tour}>{tour}</option>
+                                        ))}
                                     </Select>
                                 </FormControl>
                             </SimpleGrid>

@@ -3,15 +3,15 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
-    Box, Heading, Text, Button, useDisclosure,
-    Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter,
-    FormControl, FormLabel, Input, Select, useToast,
-    Flex, Badge, Icon, Spinner, IconButton, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, ButtonGroup
+    Box, Text, Button, useDisclosure,
+    Select, useToast,
+    Flex, Badge, Icon, Spinner, IconButton, ButtonGroup
 } from "@chakra-ui/react";
 import { Plus, Trash2, Calendar, DollarSign, Percent, Tag, Database, TurkishLira, ChevronLeft, ChevronRight } from "lucide-react";
 import DynamicTable from "@/components/common/DynamicTable";
 import CustomButton from "@/components/common/CustomButton";
 import { getTourPrices, addTourPrice, deleteTourPrice, TourPriceDefinition } from "@/services/tourService";
+import TourModal from "./TourModal";
 
 const parseAmount = (value: string) => {
     if (!value) return 0;
@@ -314,70 +314,21 @@ export default function ToursPage() {
                 </Box>
 
                 {/* Modal */}
-                <Modal isOpen={isOpen} onClose={onClose} size="lg">
-                    <ModalOverlay />
-                    <ModalContent>
-                        <ModalHeader>Yeni Fiyat Tanımı Ekle</ModalHeader>
-                        <ModalBody display="flex" flexDirection="column" gap={4}>
-                            <FormControl isRequired>
-                                <FormLabel>Tur Şirketi</FormLabel>
-                                <Input
-                                    placeholder="Tur Şirketi Adı"
-                                    value={tourName}
-                                    onChange={(e) => setTourName(e.target.value)}
-                                />
-                            </FormControl>
-
-                            <Flex gap={4}>
-                                <FormControl isRequired>
-                                    <FormLabel>Başlangıç Tarihi</FormLabel>
-                                    <Input
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                    />
-                                </FormControl>
-                                <FormControl isRequired>
-                                    <FormLabel>Bitiş Tarihi</FormLabel>
-                                    <Input
-                                        type="date"
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                    />
-                                </FormControl>
-                            </Flex>
-
-                            <Flex gap={4}>
-                                <FormControl isRequired>
-                                    <FormLabel>Yetişkin Fiyatı (₺)</FormLabel>
-                                    <Input
-                                        placeholder="Örn: 1.250,50"
-                                        value={adultPrice}
-                                        onChange={(e) => setAdultPrice(e.target.value)}
-                                    />
-                                </FormControl>
-                                <FormControl isRequired>
-                                    <FormLabel>Çocuk Katsayısı</FormLabel>
-                                    <NumberInput min={0} max={1} step={0.1} value={childDiscount} onChange={(val) => setChildDiscount(val)}>
-                                        <NumberInputField placeholder="Örn: 0.7" />
-                                        <NumberInputStepper>
-                                            <NumberIncrementStepper />
-                                            <NumberDecrementStepper />
-                                        </NumberInputStepper>
-                                    </NumberInput>
-                                    <Text fontSize="xs" color="gray.500" mt={1}>
-                                        0.7 = %70 Fiyat (Yetişkin fiyatının %70'i)
-                                    </Text>
-                                </FormControl>
-                            </Flex>
-                        </ModalBody>
-
-                        <ModalFooter>
-                            <Button variant="ghost" mr={3} onClick={onClose}>İptal</Button>
-                            <Button colorScheme="brand" onClick={handleSubmit}>Kaydet</Button>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
+                <TourModal
+                    isOpen={isOpen}
+                    onClose={onClose}
+                    tourName={tourName}
+                    setTourName={setTourName}
+                    startDate={startDate}
+                    setStartDate={setStartDate}
+                    endDate={endDate}
+                    setEndDate={setEndDate}
+                    adultPrice={adultPrice}
+                    setAdultPrice={setAdultPrice}
+                    childDiscount={childDiscount}
+                    setChildDiscount={setChildDiscount}
+                    handleSubmit={handleSubmit}
+                />
             </Box>
         </Box>
     );

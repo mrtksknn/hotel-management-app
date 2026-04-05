@@ -1,0 +1,4 @@
+1:"$Sreact.fragment"
+2:I[39756,["/hotel-management-app/_next/static/chunks/532803bd4ca57c7d.js","/hotel-management-app/_next/static/chunks/42879de7b8087bc9.js","/hotel-management-app/_next/static/chunks/7a2b046a26a6cebf.js","/hotel-management-app/_next/static/chunks/d2fd9ec0bd7a3518.js","/hotel-management-app/_next/static/chunks/d080202d23cc2b23.js"],"default"]
+3:I[37457,["/hotel-management-app/_next/static/chunks/532803bd4ca57c7d.js","/hotel-management-app/_next/static/chunks/42879de7b8087bc9.js","/hotel-management-app/_next/static/chunks/7a2b046a26a6cebf.js","/hotel-management-app/_next/static/chunks/d2fd9ec0bd7a3518.js","/hotel-management-app/_next/static/chunks/d080202d23cc2b23.js"],"default"]
+0:{"buildId":"OMiLUsVm0r_BQhJhgcvqA","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}

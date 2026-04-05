@@ -95,3 +95,11 @@ export const getTourNames = async (hotel: string): Promise<string[]> => {
         return [];
     }
 };
+
+export const findPriceForDate = (prices: TourPriceDefinition[], date: Date, tourName: string): TourPriceDefinition | undefined => {
+    return prices.find(p =>
+        p.tourName === tourName &&
+        date >= p.startDate &&
+        date <= p.endDate
+    );
+};

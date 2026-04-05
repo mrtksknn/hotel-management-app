@@ -26,7 +26,7 @@ import {
 import { useState, useEffect } from "react";
 import { addReservation } from "../../services/reservationsService";
 import { getAvailableRooms } from "../../services/roomsService";
-import { getTourNames } from "../../services/tourService";
+import { getTourNames, getTourPrices, TourPriceDefinition, findPriceForDate } from "../../services/tourService";
 import { Room } from "@/app/rooms/types";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -39,7 +39,7 @@ export default function ReservationModal({ isOpen, onClose }: Props) {
     const { user } = useAuth();
     const [formData, setFormData] = useState({
         isim: "",
-        giris_tarihi: "",
+        giris_tarihi: new Date().toISOString().split('T')[0],
         baslangic_tarihi: "",
         bitis_tarihi: "",
         pax: 1,
@@ -53,21 +53,44 @@ export default function ReservationModal({ isOpen, onClose }: Props) {
     const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(false);
     const [tourOptions, setTourOptions] = useState<string[]>([]);
+    const [tourPrices, setTourPrices] = useState<TourPriceDefinition[]>([]);
 
     useEffect(() => {
         const fetchTours = async () => {
             if (user?.hotel) {
-                const tours = await getTourNames(user.hotel);
-                setTourOptions(tours);
+                const prices = await getTourPrices(user.hotel);
+                setTourPrices(prices);
+                const names = Array.from(new Set(prices.map(p => p.tourName))).sort();
+                setTourOptions(names);
             }
         };
         fetchTours();
     }, [user?.hotel]);
 
+    useEffect(() => {
+        if (formData.giris_tarihi && formData.baslangic_tarihi && formData.bitis_tarihi) {
+            const creationDate = new Date(formData.giris_tarihi);
+            const start = new Date(formData.baslangic_tarihi);
+            const end = new Date(formData.bitis_tarihi);
+
+            if (start < end) {
+                const priceDef = findPriceForDate(tourPrices, creationDate, formData.tur);
+                if (priceDef) {
+                    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                    const adultPrice = Number(priceDef.adultPrice);
+                    const childPrice = adultPrice * priceDef.childDiscount;
+
+                    const total = (adultPrice * Number(formData.pax) + childPrice * Number(formData.cocuk_sayisi)) * days;
+                    setFormData(prev => ({ ...prev, ucret: total.toString() }));
+                }
+            }
+        }
+    }, [formData.giris_tarihi, formData.baslangic_tarihi, formData.bitis_tarihi, formData.pax, formData.cocuk_sayisi, formData.tur, tourPrices]);
+
     const resetForm = () => {
         setFormData({
             isim: "",
-            giris_tarihi: "",
+            giris_tarihi: new Date().toISOString().split('T')[0],
             baslangic_tarihi: "",
             bitis_tarihi: "",
             pax: 1,
@@ -170,6 +193,11 @@ export default function ReservationModal({ isOpen, onClose }: Props) {
                             <FormControl mb={3}>
                                 <FormLabel>İsim</FormLabel>
                                 <Input name="isim" value={formData.isim} onChange={handleChange} />
+                            </FormControl>
+
+                            <FormControl mb={3}>
+                                <FormLabel>Rezervasyon Tarihi</FormLabel>
+                                <Input type="date" name="giris_tarihi" value={formData.giris_tarihi} onChange={handleChange} />
                             </FormControl>
 
                             <SimpleGrid columns={2} spacing={2} mb={3}>

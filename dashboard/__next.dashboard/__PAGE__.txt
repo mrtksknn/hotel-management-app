@@ -3,7 +3,7 @@
 3:I[78928,["/hotel-management-app/_next/static/chunks/532803bd4ca57c7d.js","/hotel-management-app/_next/static/chunks/d080202d23cc2b23.js","/hotel-management-app/_next/static/chunks/d2fd9ec0bd7a3518.js","/hotel-management-app/_next/static/chunks/7a2b046a26a6cebf.js","/hotel-management-app/_next/static/chunks/f04a1156e9b5f4d6.js"],"default"]
 6:I[97367,["/hotel-management-app/_next/static/chunks/42879de7b8087bc9.js"],"OutletBoundary"]
 7:"$Sreact.suspense"
-0:{"buildId":"OMiLUsVm0r_BQhJhgcvqA","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/hotel-management-app/_next/static/chunks/f04a1156e9b5f4d6.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"UBTH74hu-66WU0WpUuTWq","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/hotel-management-app/_next/static/chunks/f04a1156e9b5f4d6.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
 4:{}
 5:{}
 8:null

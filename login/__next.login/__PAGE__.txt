@@ -1,9 +1,9 @@
 1:"$Sreact.fragment"
-2:I[47257,["/hotel-management-app/_next/static/chunks/42879de7b8087bc9.js"],"ClientPageRoot"]
-3:I[89954,["/hotel-management-app/_next/static/chunks/532803bd4ca57c7d.js","/hotel-management-app/_next/static/chunks/d080202d23cc2b23.js","/hotel-management-app/_next/static/chunks/d2fd9ec0bd7a3518.js","/hotel-management-app/_next/static/chunks/7a2b046a26a6cebf.js","/hotel-management-app/_next/static/chunks/d05deb4fbc7538ca.js"],"default"]
-6:I[97367,["/hotel-management-app/_next/static/chunks/42879de7b8087bc9.js"],"OutletBoundary"]
+2:I[47257,["/hotel-management-app/_next/static/chunks/501f4f1c6c42cd35.js"],"ClientPageRoot"]
+3:I[89954,["/hotel-management-app/_next/static/chunks/72c23e867766f101.js","/hotel-management-app/_next/static/chunks/b7ca1068c7101a3d.js","/hotel-management-app/_next/static/chunks/ed4ad8fdb67c1fbb.js","/hotel-management-app/_next/static/chunks/89a442f97ab666ee.js","/hotel-management-app/_next/static/chunks/75e78a4ac920eb49.js","/hotel-management-app/_next/static/chunks/4b4dd34e41d6c2ca.js"],"default"]
+6:I[97367,["/hotel-management-app/_next/static/chunks/501f4f1c6c42cd35.js"],"OutletBoundary"]
 7:"$Sreact.suspense"
-0:{"buildId":"UBTH74hu-66WU0WpUuTWq","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/hotel-management-app/_next/static/chunks/d05deb4fbc7538ca.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"0IgQfbm8LCtoMYDbvJGJ3","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/hotel-management-app/_next/static/chunks/4b4dd34e41d6c2ca.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
 4:{}
 5:{}
 8:null

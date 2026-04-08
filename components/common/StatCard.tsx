@@ -7,9 +7,10 @@ interface StatCardProps {
     icon: any;
     colorScheme: string;
     variant?: 'normal' | 'compact' | 'veryCompact';
+    onClick?: () => void;
 }
 
-const StatCard = ({ title, value, subValue, icon, colorScheme, variant = 'normal' }: StatCardProps) => {
+const StatCard = ({ title, value, subValue, icon, colorScheme, variant = 'normal', onClick }: StatCardProps) => {
     const isVeryCompact = variant === 'veryCompact';
     const isCompact = variant === 'compact';
 
@@ -24,13 +25,15 @@ const StatCard = ({ title, value, subValue, icon, colorScheme, variant = 'normal
     return (
         <Box
             p={p}
-            borderRadius="xl"
-            bg="white"
+            borderRadius="2xl"
+            bg="rgba(255, 255, 255, 0.7)"
+            backdropFilter="blur(16px)"
             border="1px solid"
-            borderColor="neutral.100"
-            boxShadow="sm"
-            transition="all 0.2s"
-            _hover={{ transform: "translateY(-2px)", boxShadow: "soft" }}
+            borderColor="rgba(255, 255, 255, 0.5)"
+            boxShadow="0 4px 30px rgba(0, 0, 0, 0.05)"
+            transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+            _hover={{ transform: "translateY(-2px)", boxShadow: "soft", cursor: onClick ? "pointer" : "default" }}
+            onClick={onClick}
             display="flex"
             alignItems="center"
             gap={gap}

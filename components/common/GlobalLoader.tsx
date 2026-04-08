@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { usePathname } from "next/navigation";
 import { Box, Text, VStack } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -9,7 +9,6 @@ const MotionBox = motion(Box);
 
 export default function GlobalLoader({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -22,7 +21,7 @@ export default function GlobalLoader({ children }: { children: React.ReactNode }
         }, 3000);
 
         return () => clearTimeout(timer);
-    }, [pathname, searchParams]);
+    }, [pathname]);
 
     return (
         <>
@@ -87,7 +86,7 @@ export default function GlobalLoader({ children }: { children: React.ReactNode }
                             {/* Loading Text with Typing Effect */}
                             <VStack spacing={2}>
                                 <Text fontSize="xl" fontWeight="bold" color="gray.700" letterSpacing="wider">
-                                    HOTEL MANAGEMENT
+                                    HotelCloud
                                 </Text>
                                 <Text fontSize="sm" color="gray.500" fontWeight="medium">
                                     Yükleniyor...

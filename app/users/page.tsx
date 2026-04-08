@@ -8,19 +8,9 @@ import {
     Card,
     Spinner,
     useDisclosure,
-    Input,
-    Select,
     useToast,
+    Badge,
 } from "@chakra-ui/react";
-
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-} from "@chakra-ui/react/modal";
 
 import {
     getUsersStats,
@@ -33,7 +23,8 @@ import {
 import { CustomButton } from "@/components";
 import DynamicTable from "@/components/common/DynamicTable";
 import StatCard from "@/components/common/StatCard";
-import { getStatsArray } from "./utils";
+import { getStatsArray, INITIAL_FORM_STATE } from "./utils";
+import UserModal from "./UserModal";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function UsersPage() {
@@ -42,34 +33,32 @@ export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [form, setForm] = useState({
-        name: "",
-        email: "",
-        password: "",
-        role: "staff",
-        hotel: "",
-    });
+    const [form, setForm] = useState(INITIAL_FORM_STATE);
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [mode, setMode] = useState<"add" | "edit">("add");
 
     const loadUsers = async () => {
-        const data = await getUsersList(user?.hotel);
+        const hotelId = user?.hotelIds?.[0];
+        const data = await getUsersList(hotelId);
         setUsers(data);
     };
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!user?.hotel) {
+            if (!user?.hotelIds || user.hotelIds.length === 0) {
                 setLoading(false);
                 return;
             }
 
             try {
-                const userStats = await getUsersStats(user.hotel);
-                setStats(userStats);
-                const usersData = await getUsersList(user.hotel);
-                setUsers(usersData);
+                const hotelId = user.hotelIds?.[0];
+                if (hotelId) {
+                    const userStats = await getUsersStats(hotelId);
+                    setStats(userStats);
+                    const usersData = await getUsersList(hotelId);
+                    setUsers(usersData);
+                }
             } catch (error) {
                 console.error("Kullanıcı verileri alınamadı:", error);
             } finally {
@@ -80,19 +69,22 @@ export default function UsersPage() {
     }, [user]);
 
     const refreshUsers = async () => {
-        const list = await getUsersList(user?.hotel);
+        const hotelId = user?.hotelIds?.[0];
+        const list = await getUsersList(hotelId);
         setUsers(list);
     };
 
     // 🔹 Yeni kullanıcı ekle
     const handleAddUser = async () => {
-        if (!user?.hotel) {
-            toast({ title: "Hotel bilgisi bulunamadı", status: "error" });
+        if (!user || !user.hotelIds || user.hotelIds.length === 0) {
+            toast({ title: "Otel bilgisi bulunamadı", status: "error" });
             return;
         }
 
         try {
-            await addUser(form.name, form.email, form.password, form.role, user.hotel);
+            const hotelId = user.hotelIds[0];
+            if (!hotelId) throw new Error("Otel ID bulunamadı");
+            await addUser(form.name, form.email, form.password, form.team, form.title, hotelId, { uid: user.uid, name: user.name });
             toast({ title: "Kullanıcı eklendi", status: "success" });
             refreshUsers();
             onClose();
@@ -107,14 +99,15 @@ export default function UsersPage() {
 
     // 🔹 Kullanıcı güncelle (Sadece Firestore)
     const handleUpdateUser = async () => {
-        if (!selectedUser?.id) return;
+        if (!selectedUser?.id || !user) return;
 
         try {
             await updateUser(selectedUser.id, {
                 name: form.name,
-                role: form.role,
-                hotel: form.hotel,
-            });
+                team: form.team,
+                title: form.title,
+                hotelIds: [form.hotel],
+            }, { uid: user.uid, name: user.name });
 
             toast({ title: "Kullanıcı bilgileri güncellendi", status: "info" });
             refreshUsers();
@@ -129,9 +122,12 @@ export default function UsersPage() {
     };
 
     const handleDeleteUser = async (userId: string) => {
+        if (!user) return;
         if (confirm("Bu kullanıcıyı silmek istediğine emin misin?")) {
             try {
-                await deleteUserFromFirestore(userId);
+                const hotelId = user.hotelIds?.[0];
+                if (!hotelId) return;
+                await deleteUserFromFirestore(userId, hotelId, { uid: user.uid, name: user.name });
                 await loadUsers();
                 toast({ title: "Kullanıcı silindi", status: "success" });
             } catch (err) {
@@ -146,8 +142,9 @@ export default function UsersPage() {
             name: user.name,
             email: user.email,
             password: "",
-            role: user.role,
-            hotel: user.hotel || "",
+            team: user.team || "reception",
+            title: user.title || "",
+            hotel: user.hotelIds?.[0] || "",
         });
         setMode("edit");
         onOpen();
@@ -155,7 +152,7 @@ export default function UsersPage() {
 
     const openAddModal = () => {
         setSelectedUser(null);
-        setForm({ name: "", email: "", password: "", role: "staff", hotel: "" });
+        setForm(INITIAL_FORM_STATE);
         setMode("add");
         onOpen();
     };
@@ -214,13 +211,19 @@ export default function UsersPage() {
                 <DynamicTable
                     columns={[
                         { header: "İsim", accessor: "name" },
-                        { header: "Mail", accessor: "email" },
                         {
-                            header: "Rol",
-                            accessor: "role",
-                            render: (user) => <Text textTransform="capitalize">{user.role}</Text>
+                            header: "Unvan / Mevki",
+                            render: (u) => <Text fontWeight="medium" color="brand.600">{u.title || "Belirtilmemiş"}</Text>
                         },
-                        { header: "Otel", accessor: "hotel" },
+                        {
+                            header: "Ekip",
+                            render: (u) => (
+                                <Badge colorScheme="purple" variant="subtle" borderRadius="full" px={2} textTransform="capitalize">
+                                    {u.team}
+                                </Badge>
+                            )
+                        },
+                        { header: "Mail", accessor: "email" },
                         {
                             header: "İşlemler",
                             render: (user) => (
@@ -255,56 +258,14 @@ export default function UsersPage() {
 
 
             {/* Kullanıcı Ekle / Güncelle Modal */}
-            <Modal isOpen={isOpen} onClose={onClose}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>
-                        {mode === "add" ? "Yeni Kullanıcı Ekle" : "Kullanıcıyı Güncelle"}
-                    </ModalHeader>
-                    <ModalBody display="flex" flexDirection="column" gap={3}>
-                        <Input
-                            placeholder="İsim"
-                            value={form.name}
-                            onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        />
-                        <Input
-                            placeholder="Email"
-                            value={form.email}
-                            isReadOnly={mode === "edit"} // 🔒 Güncellemede e-posta değiştirilemez
-                            onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        />
-                        {mode === "add" && (
-                            <Input
-                                placeholder="Şifre"
-                                type="password"
-                                value={form.password}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                            />
-                        )}
-                        <Select
-                            value={form.role}
-                            onChange={(e) => setForm({ ...form, role: e.target.value })}
-                        >
-                            <option value="manager">Manager</option>
-                            <option value="receptionist">Receptionist</option>
-                            <option value="housekeeper">Housekeeper</option>
-                            <option value="staff">Staff</option>
-                        </Select>
-                    </ModalBody>
-
-                    <ModalFooter display="flex" gap={2}>
-                        <CustomButton variant="ghost" onClick={onClose}>Vazgeç</CustomButton>
-                        <CustomButton
-                            bg="brand.500"
-                            color="white"
-                            _hover={{ bg: "brand.600" }}
-                            onClick={mode === "add" ? handleAddUser : handleUpdateUser}
-                        >
-                            {mode === "add" ? "Ekle" : "Güncelle"}
-                        </CustomButton>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <UserModal
+                isOpen={isOpen}
+                onClose={onClose}
+                mode={mode}
+                form={form}
+                setForm={setForm}
+                onSave={mode === "add" ? handleAddUser : handleUpdateUser}
+            />
         </Box>
     );
 }

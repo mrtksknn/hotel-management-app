@@ -12,8 +12,8 @@ import {
 } from "@chakra-ui/react";
 import { useRouter, usePathname } from "next/navigation";
 import { db } from "@/lib/firebaseClient";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { LogOut } from "lucide-react";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { LogOut, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function Sidebar() {
     const router = useRouter();
@@ -21,7 +21,8 @@ export default function Sidebar() {
     const { logout } = useAuth();
     const [gray] = useToken("colors", ["gray"]);
 
-    const [userData, setUserData] = useState<{ name: string; email: string; role: string; hotel: string } | null>(null);
+    const [userData, setUserData] = useState<{ name: string; email: string; role: string; team: string; title: string; hotelIds: string[] } | null>(null);
+    const [activeHotelName, setActiveHotelName] = useState<string>("");
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -50,19 +51,31 @@ export default function Sidebar() {
                         name: string;
                         email: string;
                         role: string;
-                        hotel: string;
+                        team: string;
+                        title: string;
+                        hotelIds: string[];
                     };
                     setUserData(data);
+
+                    // İlk otelin ismini çek
+                    if (data.hotelIds && data.hotelIds.length > 0) {
+                        const hotelRef = doc(db, "hotels", data.hotelIds[0]);
+                        const hotelSnap = await getDoc(hotelRef);
+                        if (hotelSnap.exists()) {
+                            setActiveHotelName(hotelSnap.data().name);
+                        }
+                    }
                 }
             } catch (error) {
-                console.error("Kullanıcı bilgileri alınamadı:", error);
+                console.error("Kullanıcı veya otel bilgileri alınamadı:", error);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchUserData();
     }, []);
+
+
 
     // 🔹 İsimden baş harfleri üret
     const getInitials = (fullName: string | undefined) => {
@@ -77,16 +90,9 @@ export default function Sidebar() {
 
     // 🔹 Menü öğeleri (rol bazlı kontrol burada yapılacak)
     const menuItems = [
-        { label: "Anasayfa", path: "/dashboard", roles: ["owner", "manager", "user", "employee"] },
-        { label: "Rezervasyonlar", path: "/reservations", roles: ["owner", "manager", "user", "employee"] },
-        { label: "Odalar", path: "/rooms", roles: ["owner", "manager", "user", "employee"] },
-        { label: "Oda Durumu", path: "/status", roles: ["owner", "manager", "user", "employee"] },
-        { label: "Giriş-Çıkış", path: "/checkinout", roles: ["owner", "manager", "user", "employee"] },
-        { label: "Temizlik Planı", path: "/cleaning", roles: ["owner", "manager", "user", "employee"] },
-        { label: "Firma Ödemeleri", path: "/vendors", roles: ["owner", "manager"] },
-        { label: "Turlar ve Fiyatlar", path: "/tours", roles: ["owner", "manager"] },
-        { label: "Oteller", path: "/oteller", roles: ["sistem-admin"] },
-        { label: "Kullanıcılar", path: "/users", roles: ["owner"] },
+        { label: "Anasayfa", path: "/dashboard", allowedTeams: ["owner", "management", "reception", "housekeeping", "kitchen", "technical"] },
+        { label: "Oteller", path: "/hotels", allowedTeams: ["owner"] },
+        { label: "Kullanıcılar", path: "/users", allowedTeams: ["owner"] },
     ];
 
     return (
@@ -113,7 +119,7 @@ export default function Sidebar() {
                     borderBottom="1px solid"
                     borderColor="neutral.100"
                 >
-                    <Box
+                        <Box
                         width="2.5rem"
                         height="2.5rem"
                         borderRadius="lg"
@@ -126,11 +132,11 @@ export default function Sidebar() {
                         fontSize="md"
                         boxShadow="soft"
                     >
-                        {getInitials(userData?.hotel)}
+                        {getInitials(activeHotelName)}
                     </Box>
                     <Box>
                         <Text fontSize="md" fontWeight="semibold" color="neutral.800">
-                            {userData?.hotel}
+                            {activeHotelName}
                         </Text>
                         <Text fontSize="xs" color="neutral.500">
                             Management System
@@ -143,30 +149,39 @@ export default function Sidebar() {
                     <Stack spacing={1}>
                         {menuItems
                             .filter((item) =>
-                                userData ? item.roles.includes(userData.role) : false
+                                userData ? item.allowedTeams.includes(userData.team || userData.role) : false
                             )
                             .map((item) => {
-                                const isActive = pathname === item.path;
+                                const isMainActive = pathname === item.path;
+
                                 return (
-                                    <Box
-                                        key={item.path}
-                                        px={4}
-                                        py={3}
-                                        cursor="pointer"
-                                        borderRadius="lg"
-                                        fontSize="sm"
-                                        fontWeight="medium"
-                                        color={isActive ? "brand.600" : "neutral.700"}
-                                        bg={isActive ? "brand.50" : "transparent"}
-                                        transition="all 0.2s ease-in-out"
-                                        _hover={{
-                                            bg: "brand.50",
-                                            color: "brand.600",
-                                            transform: "translateX(4px)"
-                                        }}
-                                        onClick={() => router.push(item.path)}
-                                    >
-                                        {item.label}
+                                    <Box key={item.label}>
+                                        <Box
+                                            px={4}
+                                            py={3}
+                                            cursor="pointer"
+                                            borderRadius="lg"
+                                            fontSize="sm"
+                                            fontWeight="bold"
+                                            color={isMainActive ? "brand.600" : "neutral.700"}
+                                            bg={isMainActive ? "brand.50" : "transparent"}
+                                            transition="all 0.2s ease-in-out"
+                                            display="flex"
+                                            justifyContent="space-between"
+                                            alignItems="center"
+                                            _hover={{
+                                                bg: "brand.50",
+                                                color: "brand.600",
+                                                transform: "translateX(4px)"
+                                            }}
+                                            onClick={() => {
+                                                if (item.path) {
+                                                    router.push(item.path);
+                                                }
+                                            }}
+                                        >
+                                            <Text>{item.label}</Text>
+                                        </Box>
                                     </Box>
                                 );
                             })}
@@ -210,8 +225,8 @@ export default function Sidebar() {
                             <Text fontSize="sm" fontWeight="semibold" color="neutral.800">
                                 {userData.name}
                             </Text>
-                            <Text fontSize="xs" color="neutral.500" textTransform="capitalize">
-                                {userData.role}
+                            <Text fontSize="xs" color="neutral.500">
+                                {userData.title || userData.role}
                             </Text>
                         </Box>
                     </Box>

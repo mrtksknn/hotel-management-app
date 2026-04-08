@@ -12,8 +12,8 @@ const inter = Inter({ subsets: ["latin"] });
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Login ve Register sayfalarında Sidebar gizli olacak
-  const isAuthPage = pathname === "/login" || pathname === "/register";
+  // Ana sayfa, Login ve Register sayfalarında Sidebar gizli olacak
+  const isAuthPage = pathname === "/" || pathname === "/login" || pathname === "/register";
 
   return (
     <html lang="tr">

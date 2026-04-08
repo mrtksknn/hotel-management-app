@@ -1,7 +1,5 @@
 import { db } from "../lib/firebaseClient";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { Room } from "@/app/rooms/types";
-import { CheckInOutData } from "./checkInOutService";
 
 export interface DashboardStats {
     todayRevenue: number;
@@ -12,6 +10,27 @@ export interface DashboardStats {
     urgentRooms: { room: string; issue: string; level: "warning" | "error"; icon: string }[];
 }
 
+// 🔹 Eksik tipler burada tanımlandı (veya merkezi bir dosyadan çekilebilir)
+interface Room {
+    id: string;
+    no: string | number;
+    status: string;
+    hotelId: string;
+}
+
+interface ReservationData {
+    isim: string;
+    ucret: string | number;
+    pax?: number;
+    tur?: string;
+    room_code?: string;
+    baslangic_tarihi: any;
+    bitis_tarihi: any;
+    checked_in?: boolean;
+    checked_out?: boolean;
+    hotelId: string;
+}
+
 /**
  * Dashboard verilerini gerçek zamanlı olarak dinler
  */
@@ -19,11 +38,12 @@ export const subscribeToDashboardStats = (hotelId: string, callback: (stats: Das
     const roomsRef = collection(db, "rooms");
     const resRef = collection(db, "reservations");
 
-    const roomsQuery = query(roomsRef, where("hotel", "==", hotelId));
-    const resQuery = query(resRef, where("hotel", "==", hotelId));
+    // 🔹 Sorgu alanları "hotelId" olarak güncellendi
+    const roomsQuery = query(roomsRef, where("hotelId", "==", hotelId));
+    const resQuery = query(resRef, where("hotelId", "==", hotelId));
 
     let rooms: Room[] = [];
-    let reservations: CheckInOutData[] = [];
+    let reservations: ReservationData[] = [];
 
     const calculate = () => {
         const today = new Date();
@@ -33,6 +53,7 @@ export const subscribeToDashboardStats = (hotelId: string, callback: (stats: Das
             if (!field) return new Date();
             if (field.toDate) return field.toDate();
             if (typeof field === 'string') return new Date(field);
+            if (typeof field === 'number') return new Date(field);
             return new Date();
         };
 
@@ -53,42 +74,50 @@ export const subscribeToDashboardStats = (hotelId: string, callback: (stats: Das
         reservations.forEach(res => {
             const start = normalizeDate(safeToDate(res.baslangic_tarihi)).getTime();
             const end = normalizeDate(safeToDate(res.bitis_tarihi)).getTime();
-            const ucret = parseFloat(String(res.ucret).replace(/[^\d.]/g, "").replace(".", "")) || 0;
+            
+            // 💰 Ücreti sayıya çevir (Format farklarını temizle)
+            let ucretStr = String(res.ucret || "0");
+            // Eğer "1.500,00 ₺" ise -> "1500.00"
+            const cleanedUcret = ucretStr
+                .replace(/\s|[^\d,.-]/g, "") // Para birimi ve boşlukları temizle
+                .replace(/\./g, "")           // Binlik ayracı (.) temizle
+                .replace(",", ".");           // Ondalık ayracı (,) düzelt
+            const ucret = parseFloat(cleanedUcret) || 0;
 
             // Bugün içeride olanlar
             if (res.checked_in && !res.checked_out) {
                 activeGuests += (res.pax || 0);
                 occupiedRoomsCount++;
                 
-                // Bugün konaklayanların günlük ortalama ücretini gelire ekleyelim (basit mantık)
-                const totalNights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+                // Günlük ortalama geliri ekle
+                const totalNights = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
                 todayRevenue += (ucret / totalNights);
             }
 
-            // Bugün check-in yapacaklar
+            // Bugün check-in yapacaklar (Gelire dahil edilmemiş olabilir, isteğe bağlı eklenebilir)
             if (start === todayTime && !res.checked_in) {
                 pendingCheckIns++;
             }
         });
 
-        const totalRooms = rooms.length || 1;
-        const occupancyRate = Math.round((occupiedRoomsCount / totalRooms) * 100);
+        const totalRoomsArr = rooms.length || 1;
+        const occupancyRate = Math.round((occupiedRoomsCount / (rooms.length || 1)) * 100);
 
-        // 2. VIP Gelişler (Bugün gelen ve VIP paket/notu olanlar)
+        // 2. VIP Gelişler
         const vipArrivals = reservations
             .filter(res => {
                 const start = normalizeDate(safeToDate(res.baslangic_tarihi)).getTime();
-                return start === todayTime && !res.checked_in && (String(res.tur).includes("VIP") || (res.pax && res.pax > 3));
+                return start === todayTime && !res.checked_in && (String(res.tur || "").includes("VIP") || (res.pax && res.pax > 3));
             })
             .map(res => ({
                 name: res.isim,
                 room: `${res.room_code || "---"}`,
-                time: "14:00", // Gerçek datada yoksa default
+                time: "14:00",
                 note: res.tur || "Standart Rezervasyon",
-                country: "🇹🇷" // Default
+                country: "🇹🇷"
             }));
 
-        // 3. Acil Odalar (KİRLİ olanlar)
+        // 3. Acil Odalar
         const urgentRooms = rooms
             .filter(r => r.status === "KİRLİ")
             .map(r => ({
@@ -109,12 +138,12 @@ export const subscribeToDashboardStats = (hotelId: string, callback: (stats: Das
     };
 
     const unsubRooms = onSnapshot(roomsQuery, (snap) => {
-        rooms = snap.docs.map(d => ({ id: d.id, ...d.data() } as unknown as Room));
+        rooms = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
         calculate();
     });
 
     const unsubRes = onSnapshot(resQuery, (snap) => {
-        reservations = snap.docs.map(d => ({ docId: d.id, ...d.data() } as CheckInOutData));
+        reservations = snap.docs.map(d => ({ docId: d.id, ...d.data() } as any));
         calculate();
     });
 

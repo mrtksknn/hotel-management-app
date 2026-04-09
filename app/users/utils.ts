@@ -1,22 +1,8 @@
 import { Users, UserCheck, ShieldCheck, Home, Utensils, Wrench } from "lucide-react";
 
-export const TEAMS = [
-    { value: "owner", label: "Sahip (Owner)" },
-    { value: "management", label: "Yönetim (Management)" },
-    { value: "reception", label: "Resepsiyon (Reception)" },
-    { value: "housekeeping", label: "Kat Hizmetleri (Housekeeping)" },
-    { value: "kitchen", label: "Mutfak / Restoran (Kitchen)" },
-    { value: "technical", label: "Teknik Servis (Technical)" },
-];
+import { USER_TEAMS, USER_INITIAL_FORM_STATE } from "@/constants/users";
 
-export const INITIAL_FORM_STATE = {
-    name: "",
-    email: "",
-    password: "",
-    team: "reception",
-    title: "",
-    hotel: "",
-};
+export { USER_TEAMS, USER_INITIAL_FORM_STATE };
 
 export const getStatsArray = (stats: any) => [
     { title: "Toplam Personel", count: stats?.totalStaffs || 0, icon: Users, color: "blue" },

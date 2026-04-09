@@ -28,7 +28,7 @@ import { getHotelsByOwner } from "@/services/hotelService";
 import { CustomButton } from "@/components";
 import DynamicTable from "@/components/common/DynamicTable";
 import StatCard from "@/components/common/StatCard";
-import { getStatsArray, INITIAL_FORM_STATE } from "./utils";
+import { getStatsArray, USER_INITIAL_FORM_STATE } from "./utils";
 import UserModal from "./UserModal";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -41,7 +41,7 @@ export default function UsersPage() {
     const [loading, setLoading] = useState(true);
     const [statsLoading, setStatsLoading] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [form, setForm] = useState(INITIAL_FORM_STATE);
+    const [form, setForm] = useState(USER_INITIAL_FORM_STATE);
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [mode, setMode] = useState<"add" | "edit">("add");
@@ -176,7 +176,7 @@ export default function UsersPage() {
 
     const openAddModal = () => {
         setSelectedUser(null);
-        setForm(INITIAL_FORM_STATE);
+        setForm(USER_INITIAL_FORM_STATE);
         setMode("add");
         onOpen();
     };

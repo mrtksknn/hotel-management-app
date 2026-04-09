@@ -15,13 +15,12 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: "butik",
     name: "BUTİK",
-    price: "1,490",
+    price: "2,499",
     description: "1 işletme ve 10-50 odaya sahip butik oteller için ideal başlangıç.",
     features: [
-      "Maks. 20 Oda Yönetimi",
+      "Maks. 50 Oda Yönetimi",
       "Temel Rezervasyon Takibi",
       "1 Yönetici Hesabı",
-      "Standart E-posta Desteği"
     ],
     buttonText: "14 Gün Dene",
     colorScheme: "blue",
@@ -30,12 +29,12 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: "standart",
     name: "STANDART",
-    price: "3,990",
+    price: "3,999",
     description: "2 işletme ve 50-100 oda arası oteller için tüm premium özellikler.",
     badge: "EN POPÜLER",
     isHighlighted: true,
     features: [
-      "Maks. 80 Oda Yönetimi",
+      "Maks. 100 Oda Yönetimi",
       "Kanban Check-in / Check-out",
       "5 Kullanıcıya Kadar",
       "Gelişmiş Dinamik İstatistik",
@@ -48,7 +47,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: "premium",
     name: "PREMİUM",
-    price: "8,990",
+    price: "9,999",
     description: "2+ işletme ve 100+ odaya sahip büyük oteller ve zincirler için sınırsız erişim.",
     features: [
       "Sınırsız Oda Kapasitesi",

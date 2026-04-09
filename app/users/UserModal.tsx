@@ -12,7 +12,7 @@ import {
     Text,
 } from "@chakra-ui/react";
 import { CustomButton } from "@/components";
-import { TEAMS } from "./utils";
+import { USER_TEAMS } from "./utils";
 
 interface UserModalProps {
     isOpen: boolean;
@@ -77,7 +77,7 @@ export default function UserModal({
                         onChange={(e) => setForm({ ...form, team: e.target.value })}
                         borderRadius="lg"
                     >
-                        {TEAMS.map((team) => (
+                        {USER_TEAMS.map((team) => (
                             <option key={team.value} value={team.value}>
                                 {team.label}
                             </option>

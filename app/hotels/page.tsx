@@ -16,6 +16,8 @@ import { Hotel } from "@/types/hotel";
 import SubscriptionModal from "./SubscriptionModal";
 import HotelModal from "./HotelModal";
 
+import { HOTEL_INITIAL_FORM_STATE } from "@/constants/hotels";
+
 interface HotelWithStats extends Hotel {
   employeeCount: number;
   roomCount: number;
@@ -38,7 +40,7 @@ export default function HotelsPage() {
 
   const [isEdit, setIsEdit] = useState(false);
   const [currentHotel, setCurrentHotel] = useState<Partial<HotelWithStats> | null>(null);
-  const [formData, setFormData] = useState({ name: "", location: "" });
+  const [formData, setFormData] = useState(HOTEL_INITIAL_FORM_STATE);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export default function HotelsPage() {
       return;
     }
     setIsEdit(false);
-    setFormData({ name: "", location: "" });
+    setFormData(HOTEL_INITIAL_FORM_STATE);
     onOpen();
   };
 

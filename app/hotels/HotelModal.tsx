@@ -18,6 +18,8 @@ import {
   SimpleGrid,
   Text,
   Box,
+  HStack,
+  Badge,
 } from "@chakra-ui/react";
 import { MONTHS } from "@/constants/hotels";
 
@@ -25,10 +27,16 @@ interface HotelModalProps {
   isOpen: boolean;
   onClose: () => void;
   isEdit: boolean;
-  formData: { name: string; location: string; activeMonths: number[] };
+  formData: { 
+    name: string; 
+    location: string; 
+    activeMonths: number[];
+    seasonalConfig?: Record<string, number[]>;
+  };
   setFormData: (data: any) => void;
   onSave: () => void;
   isLoading: boolean;
+  selectedYear: number;
 }
 
 export default function HotelModal({
@@ -39,6 +47,7 @@ export default function HotelModal({
   setFormData,
   onSave,
   isLoading,
+  selectedYear,
 }: HotelModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
@@ -67,8 +76,18 @@ export default function HotelModal({
               />
             </FormControl>
 
-            <Box w="full">
-              <Text fontSize="sm" color="gray.600" mb={3} fontWeight="medium">Aktif Sezon Ayları</Text>
+            <Box w="full" p={4} bg="gray.50" borderRadius="xl" border="1px solid" borderColor="gray.100">
+              <HStack justify="space-between" mb={3}>
+                <Text fontSize="sm" color="gray.700" fontWeight="bold">
+                  Sektörel Takvim ({selectedYear})
+                </Text>
+                <Badge colorScheme="brand" variant="outline" fontSize="xs" borderRadius="full">
+                  Sezon Ayarları
+                </Badge>
+              </HStack>
+              <Text fontSize="xs" color="gray.500" mb={4}>
+                Bu otelin <b>{selectedYear}</b> yılındaki aktif çalışma aylarını belirleyin.
+              </Text>
               <CheckboxGroup 
                 colorScheme="brand" 
                 value={formData.activeMonths}

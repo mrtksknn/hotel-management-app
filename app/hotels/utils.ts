@@ -36,16 +36,66 @@ export const filterHotels = (hotels: any[], filterMonth: number, selectedYear: n
 };
 
 /**
- * Generates seasonal info for display purposes.
+ * Returns the active months for a specific year, implementing fallback logic.
  */
-export const getSeasonInfo = (activeMonths: number[]) => {
-    const activeCount = activeMonths?.length || 0;
+export const getActiveMonthsForYear = (hotel: Hotel, year: number): number[] => {
+    const config = hotel.seasonalConfig || {};
+    
+    // 1. Check specific year
+    if (config[year.toString()]) {
+        return config[year.toString()];
+    }
+
+    // 2. Check previous year
+    const prevYear = year - 1;
+    if (config[prevYear.toString()]) {
+        return config[prevYear.toString()];
+    }
+
+    // 3. Fallback to default activeMonths or all year
+    return hotel.activeMonths || [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+};
+
+/**
+ * Generates seasonal info for display purposes, respecting current filters.
+ */
+export const getSeasonDisplayInfo = (hotel: Hotel, filterMonth: number, selectedYear: number) => {
+    const hotelYear = getHotelYear(hotel);
+    
+    // If hotel was created in a future year relative to selection
+    if (selectedYear < hotelYear) {
+        return {
+            label: "Kayıt Öncesi",
+            colorScheme: "gray",
+            isFullYear: false,
+            isEmpty: true,
+            currentMonths: []
+        };
+    }
+
+    const activeMonths = getActiveMonthsForYear(hotel, selectedYear);
+    const activeCount = activeMonths.length;
     const isFullYear = activeCount === 12;
 
+    // If a specific month is selected
+    if (filterMonth !== 0) {
+        const isActiveThisMonth = activeMonths.includes(filterMonth);
+        return {
+            label: isActiveThisMonth ? "Bu Ay Aktif" : "Bu Ay Kapalı",
+            colorScheme: isActiveThisMonth ? "green" : "red",
+            isFullYear: false,
+            isEmpty: false,
+            currentMonths: activeMonths
+        };
+    }
+
+    // Default view (All year or no month filter)
     return {
         label: isFullYear ? "Tüm Yıl" : `${activeCount} Ay Aktif`,
         colorScheme: isFullYear ? "green" : "orange",
-        isFullYear
+        isFullYear,
+        isEmpty: false,
+        currentMonths: activeMonths
     };
 };
 

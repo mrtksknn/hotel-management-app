@@ -13,7 +13,8 @@ export interface Hotel {
         checkOutTime: string;
         timezone: string;
     };
-    activeMonths: number[]; // Array of months (1-12) the hotel is active
+    activeMonths: number[]; // Main/Default months
+    seasonalConfig?: { [year: string]: number[] }; // Year-specific months
     createdAt: Timestamp;
 }
 

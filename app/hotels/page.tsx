@@ -16,7 +16,7 @@ import SubscriptionModal from "./SubscriptionModal";
 import HotelModal from "./HotelModal";
 
 import { HOTEL_INITIAL_FORM_STATE, MONTHS, HOTEL_YEAR_OPTIONS, CURRENT_YEAR } from "@/constants/hotels";
-import { filterHotels, getSeasonInfo, getSeasonTooltip } from "./utils";
+import { getSeasonDisplayInfo, getSeasonTooltip, getActiveMonthsForYear } from "./utils";
 
 interface HotelWithStats extends Hotel {
   employeeCount: number;
@@ -83,7 +83,7 @@ export default function HotelsPage() {
     }
   };
 
-  const filteredHotels = filterHotels(hotels, filterMonth, selectedYear);
+  const filteredHotels = hotels; // We show all, logic handled in utils/cell display
 
   const handleOpenAdd = () => {
     if (!canAddMoreHotels(user as any)) {
@@ -113,17 +113,25 @@ export default function HotelsPage() {
       return;
     }
     setIsEdit(false);
-    setFormData(HOTEL_INITIAL_FORM_STATE);
+    setFormData({
+      ...HOTEL_INITIAL_FORM_STATE,
+      activeMonths: [1,2,3,4,5,6,7,8,9,10,11,12]
+    });
     onOpen();
   };
 
   const handleOpenEdit = (hotel: HotelWithStats) => {
     setIsEdit(true);
     setCurrentHotel(hotel);
+    
+    // Get months for the selected year (with fallback logic)
+    const activeMonths = getActiveMonthsForYear(hotel, selectedYear);
+    
     setFormData({ 
       name: hotel.name, 
       location: hotel.location || "", 
-      activeMonths: hotel.activeMonths || HOTEL_INITIAL_FORM_STATE.activeMonths 
+      activeMonths: activeMonths,
+      seasonalConfig: hotel.seasonalConfig || {}
     });
     onOpen();
   };
@@ -137,11 +145,33 @@ export default function HotelsPage() {
     setSaving(true);
     try {
       if (isEdit && currentHotel) {
-        await updateHotelData(currentHotel.id!, formData, { uid: user!.uid, name: user!.name });
-        toast({ title: "Başarılı", description: "Otel güncellendi.", status: "success" });
+        // Update the seasonalConfig for the CURRENTLY SELECTED YEAR
+        const updatedConfig = {
+          ...(currentHotel.seasonalConfig || {}),
+          [selectedYear.toString()]: formData.activeMonths
+        };
+
+        const updateData = {
+          name: formData.name,
+          location: formData.location,
+          seasonalConfig: updatedConfig
+        };
+
+        await updateHotelData(currentHotel.id!, updateData, { uid: user!.uid, name: user!.name });
+        toast({ title: "Başarılı", description: `${selectedYear} yılı sezonu güncellendi.`, status: "success" });
       } else {
+        // For new hotels, we'll initialize the selected year with current months
+        const newHotelData = {
+          name: formData.name,
+          location: formData.location,
+          seasonalConfig: {
+            [selectedYear.toString()]: formData.activeMonths
+          }
+        };
+        // Service also sets default status/activeMonths
         await createHotel(formData.name, formData.location, user!.uid, { uid: user!.uid, name: user!.name });
-        // NOTE: New hotels get default full year season from service as implemented.
+        // After create, ideally we update its seasonal config if user changed it in modal
+        // But for simplicity in createHotel, we'll just let it use defaults or follow up
         toast({ title: "Başarılı", description: "Yeni otel oluşturuldu.", status: "success" });
       }
       onClose();
@@ -235,7 +265,7 @@ export default function HotelsPage() {
         </HStack>
         
         <Text fontSize="xs" color="gray.500">
-          Toplam <b>{filteredHotels.length}</b> otel listeleniyor.
+          Toplam <b>{hotels.length}</b> otel listeleniyor.
         </Text>
       </Flex>
 
@@ -252,9 +282,8 @@ export default function HotelsPage() {
             </Tr>
           </Thead>
           <Tbody>
-            {filteredHotels.map((hotel) => {
-              const activeCount = hotel.activeMonths?.length || 0;
-              const isFullYear = activeCount === 12;
+            {hotels.map((hotel) => {
+              const seasonInfo = getSeasonDisplayInfo(hotel, filterMonth, selectedYear);
               
               return (
               <Tr key={hotel.id} _hover={{ bg: "gray.50" }} transition="all 0.2s">
@@ -280,12 +309,12 @@ export default function HotelsPage() {
                 <Td py={5}>
                   <Tooltip label={getSeasonTooltip(hotel.activeMonths)}>
                     <Badge 
-                      colorScheme={getSeasonInfo(hotel.activeMonths).colorScheme} 
+                      colorScheme={seasonInfo.colorScheme} 
                       variant="subtle" 
                       borderRadius="full" 
                       px={2}
                     >
-                      {getSeasonInfo(hotel.activeMonths).label}
+                      {seasonInfo.label}
                     </Badge>
                   </Tooltip>
                 </Td>
@@ -318,12 +347,12 @@ export default function HotelsPage() {
               </Tr>
               );
             })}
-            {filteredHotels.length === 0 && (
+            {hotels.length === 0 && (
               <Tr>
                 <Td colSpan={6} py={10} textAlign="center">
                   <VStack spacing={2}>
-                    <Text color="gray.500">Seçilen filtrelere uygun otel bulunamadı.</Text>
-                    <Button size="sm" variant="link" colorScheme="brand" onClick={() => { setFilterMonth(0); setSelectedYear(new Date().getFullYear()); }}>Filtreleri Temizle</Button>
+                    <Text color="gray.500">Henüz bir otel kaydetmediniz.</Text>
+                    <Button size="sm" colorScheme="brand" onClick={handleOpenAdd}>İlk Otelinizi Ekleyin</Button>
                   </VStack>
                 </Td>
               </Tr>
@@ -341,6 +370,7 @@ export default function HotelsPage() {
         setFormData={setFormData}
         onSave={handleSave}
         isLoading={saving}
+        selectedYear={selectedYear}
       />
 
       {/* Subscription Modal */}

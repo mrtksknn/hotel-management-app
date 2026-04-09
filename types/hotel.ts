@@ -13,6 +13,7 @@ export interface Hotel {
         checkOutTime: string;
         timezone: string;
     };
+    activeMonths: number[]; // Array of months (1-12) the hotel is active
     createdAt: Timestamp;
 }
 

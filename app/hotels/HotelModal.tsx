@@ -13,13 +13,19 @@ import {
   Input,
   Button,
   VStack,
+  Checkbox,
+  CheckboxGroup,
+  SimpleGrid,
+  Text,
+  Box,
 } from "@chakra-ui/react";
+import { MONTHS } from "@/constants/hotels";
 
 interface HotelModalProps {
   isOpen: boolean;
   onClose: () => void;
   isEdit: boolean;
-  formData: { name: string; location: string };
+  formData: { name: string; location: string; activeMonths: number[] };
   setFormData: (data: any) => void;
   onSave: () => void;
   isLoading: boolean;
@@ -60,6 +66,23 @@ export default function HotelModal({
                 borderRadius="xl"
               />
             </FormControl>
+
+            <Box w="full">
+              <Text fontSize="sm" color="gray.600" mb={3} fontWeight="medium">Aktif Sezon Ayları</Text>
+              <CheckboxGroup 
+                colorScheme="brand" 
+                value={formData.activeMonths}
+                onChange={(values) => setFormData({ ...formData, activeMonths: values.map(Number) })}
+              >
+                <SimpleGrid columns={3} spacing={3}>
+                  {MONTHS.map((month) => (
+                    <Checkbox key={month.value} value={month.value} fontSize="sm">
+                      {month.label}
+                    </Checkbox>
+                  ))}
+                </SimpleGrid>
+              </CheckboxGroup>
+            </Box>
           </VStack>
         </ModalBody>
         <ModalFooter borderTop="1px solid" borderColor="gray.100">

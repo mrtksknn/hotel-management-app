@@ -92,6 +92,7 @@ export const createHotel = async (hotelName: string, location: string, ownerId: 
         location: location.trim(),
         ownerId: ownerId,
         status: 'active',
+        activeMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], // Default all
         settings: {
             currency: "TRY",
             checkInTime: "14:00",

@@ -5,18 +5,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import {
   Box, Heading, Text, Table, Thead, Tbody, Tr, Th, Td,
-  Button, IconButton, HStack, VStack, useDisclosure, Modal,
-  ModalOverlay, ModalContent, ModalHeader, ModalFooter,
-  ModalBody, ModalCloseButton, FormControl, FormLabel,
-  Input, useToast, Spinner, Flex, Badge, Icon
+  Button, IconButton, HStack, VStack, useDisclosure,
+  useToast, Spinner, Flex, Badge, Icon, Select, Menu,
+  MenuButton, MenuList, MenuItem, Tooltip
 } from "@chakra-ui/react";
-import { Edit2, Plus, Hotel as HotelIcon, MapPin, Users, BedDouble, Star } from "lucide-react";
+import { Edit2, Plus, Hotel as HotelIcon, MapPin, Users, BedDouble, Star, Calendar, ChevronDown, Filter } from "lucide-react";
 import { getHotelsByOwner, getHotelStats, updateHotelData, createHotel, canAddMoreHotels } from "@/services/hotelService";
 import { Hotel } from "@/types/hotel";
 import SubscriptionModal from "./SubscriptionModal";
 import HotelModal from "./HotelModal";
 
-import { HOTEL_INITIAL_FORM_STATE } from "@/constants/hotels";
+import { HOTEL_INITIAL_FORM_STATE, MONTHS, HOTEL_YEAR_OPTIONS, CURRENT_YEAR } from "@/constants/hotels";
+import { filterHotels, getSeasonInfo, getSeasonTooltip } from "./utils";
 
 interface HotelWithStats extends Hotel {
   employeeCount: number;
@@ -29,6 +29,10 @@ export default function HotelsPage() {
   const toast = useToast();
   const [hotels, setHotels] = useState<HotelWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filtering states
+  const [filterMonth, setFilterMonth] = useState<number>(0); 
+  const [selectedYear, setSelectedYear] = useState<number>(CURRENT_YEAR);
 
   // Modal states
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -79,6 +83,8 @@ export default function HotelsPage() {
     }
   };
 
+  const filteredHotels = filterHotels(hotels, filterMonth, selectedYear);
+
   const handleOpenAdd = () => {
     if (!canAddMoreHotels(user as any)) {
       toast({
@@ -114,7 +120,11 @@ export default function HotelsPage() {
   const handleOpenEdit = (hotel: HotelWithStats) => {
     setIsEdit(true);
     setCurrentHotel(hotel);
-    setFormData({ name: hotel.name, location: hotel.location || "" });
+    setFormData({ 
+      name: hotel.name, 
+      location: hotel.location || "", 
+      activeMonths: hotel.activeMonths || HOTEL_INITIAL_FORM_STATE.activeMonths 
+    });
     onOpen();
   };
 
@@ -131,6 +141,7 @@ export default function HotelsPage() {
         toast({ title: "Başarılı", description: "Otel güncellendi.", status: "success" });
       } else {
         await createHotel(formData.name, formData.location, user!.uid, { uid: user!.uid, name: user!.name });
+        // NOTE: New hotels get default full year season from service as implemented.
         toast({ title: "Başarılı", description: "Yeni otel oluşturuldu.", status: "success" });
       }
       onClose();
@@ -187,26 +198,77 @@ export default function HotelsPage() {
         </HStack>
       </Flex>
 
+      <Flex justify="space-between" align="center" mb={6} bg="white" p={4} borderRadius="xl" boxShadow="sm" border="1px solid" borderColor="gray.100">
+        <HStack spacing={4}>
+          <HStack>
+            <Icon as={Calendar} color="gray.400" boxSize={4} />
+            <Text fontSize="sm" fontWeight="medium" color="gray.600">Yıl:</Text>
+            <Select 
+              size="sm" 
+              borderRadius="lg" 
+              w="110px" 
+              value={selectedYear} 
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+            >
+              {HOTEL_YEAR_OPTIONS.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </Select>
+          </HStack>
+
+          <HStack ml={4}>
+            <Icon as={Filter} color="gray.400" boxSize={4} />
+            <Text fontSize="sm" fontWeight="medium" color="gray.600">Sezon:</Text>
+            <Select 
+              size="sm" 
+              borderRadius="lg" 
+              w="150px" 
+              value={filterMonth} 
+              onChange={(e) => setFilterMonth(Number(e.target.value))}
+            >
+              <option value={0}>Tüm Yıl</option>
+              {MONTHS.map(m => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </Select>
+          </HStack>
+        </HStack>
+        
+        <Text fontSize="xs" color="gray.500">
+          Toplam <b>{filteredHotels.length}</b> otel listeleniyor.
+        </Text>
+      </Flex>
+
       <Box bg="white" p={0} borderRadius="2xl" boxShadow="sm" overflow="hidden" border="1px solid" borderColor="gray.100">
         <Table variant="simple">
           <Thead bg="gray.50">
             <Tr>
               <Th color="gray.500" fontSize="xs" py={4}>Otel Adı</Th>
               <Th color="gray.500" fontSize="xs" py={4}>Lokasyon</Th>
+              <Th color="gray.500" fontSize="xs" py={4}>Sezon</Th>
               <Th color="gray.500" fontSize="xs" py={4}>Çalışanlar</Th>
               <Th color="gray.500" fontSize="xs" py={4}>Odalar</Th>
               <Th color="gray.500" fontSize="xs" py={4} textAlign="right">İşlemler</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {hotels.map((hotel) => (
+            {filteredHotels.map((hotel) => {
+              const activeCount = hotel.activeMonths?.length || 0;
+              const isFullYear = activeCount === 12;
+              
+              return (
               <Tr key={hotel.id} _hover={{ bg: "gray.50" }} transition="all 0.2s">
                 <Td py={5}>
                   <HStack spacing={3}>
                     <Box p={2} bg="orange.50" borderRadius="lg">
                       <Icon as={HotelIcon} color="orange.500" boxSize={4} />
                     </Box>
-                    <Text fontWeight="semibold" color="gray.700">{hotel.name}</Text>
+                    <VStack align="start" spacing={0}>
+                      <Text fontWeight="semibold" color="gray.700">{hotel.name}</Text>
+                      <Text fontSize="10px" color="gray.400" textTransform="uppercase">
+                        ID: {hotel.id.slice(0, 8)}
+                      </Text>
+                    </VStack>
                   </HStack>
                 </Td>
                 <Td py={5}>
@@ -214,6 +276,18 @@ export default function HotelsPage() {
                     <Icon as={MapPin} color="gray.400" boxSize={3} />
                     <Text color="gray.600" fontSize="sm">{hotel.location || "Belirtilmemiş"}</Text>
                   </HStack>
+                </Td>
+                <Td py={5}>
+                  <Tooltip label={getSeasonTooltip(hotel.activeMonths)}>
+                    <Badge 
+                      colorScheme={getSeasonInfo(hotel.activeMonths).colorScheme} 
+                      variant="subtle" 
+                      borderRadius="full" 
+                      px={2}
+                    >
+                      {getSeasonInfo(hotel.activeMonths).label}
+                    </Badge>
+                  </Tooltip>
                 </Td>
                 <Td py={5}>
                   <HStack spacing={2}>
@@ -242,7 +316,18 @@ export default function HotelsPage() {
                   />
                 </Td>
               </Tr>
-            ))}
+              );
+            })}
+            {filteredHotels.length === 0 && (
+              <Tr>
+                <Td colSpan={6} py={10} textAlign="center">
+                  <VStack spacing={2}>
+                    <Text color="gray.500">Seçilen filtrelere uygun otel bulunamadı.</Text>
+                    <Button size="sm" variant="link" colorScheme="brand" onClick={() => { setFilterMonth(0); setSelectedYear(new Date().getFullYear()); }}>Filtreleri Temizle</Button>
+                  </VStack>
+                </Td>
+              </Tr>
+            )}
           </Tbody>
         </Table>
       </Box>

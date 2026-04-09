@@ -9,8 +9,27 @@ import { Inter } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });
 
+import { useEffect, useState } from "react";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <html lang="tr">
+        <body className={inter.className}>
+          <Providers>
+            <Box minH="100vh" />
+          </Providers>
+        </body>
+      </html>
+    );
+  }
 
   // Ana sayfa, Login ve Register sayfalarında Sidebar gizli olacak
   const isAuthPage = pathname === "/" || pathname === "/login" || pathname === "/register";

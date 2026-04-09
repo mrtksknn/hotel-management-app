@@ -33,6 +33,7 @@ import {
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { useToast } from "@chakra-ui/react";
+import { PRICING_PLANS } from "@/constants/pricing";
 
 // ──────────────────────────────────────────────
 // Motion helpers
@@ -604,169 +605,89 @@ export default function HomePage() {
             </MotionBox>
 
             <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8} alignItems="stretch">
-              {/* Butik */}
-              <MotionVStack
-                variants={fadeUp}
-                custom={0}
-                p={8}
-                bg="gray.50"
-                borderRadius="2xl"
-                border="1px solid"
-                borderColor="gray.100"
-                align="stretch"
-                justify="space-between"
-                _hover={{ boxShadow: "md", transform: "translateY(-4px)" }}
-                transition="all 0.3s"
-              >
-                <Box>
-                  <Text fontWeight="bold" color="gray.500" letterSpacing="widest" fontSize="xs">
-                    BUTİK
-                  </Text>
-                  <Heading size="2xl" my={4}>
-                    ₺1,490
-                    <Text as="span" fontSize="lg" color="gray.500">
-                      /ay
-                    </Text>
-                  </Heading>
-                  <Text color="gray.500" mb={6}>
-                    0-20 odaya sahip butik oteller için ideal başlangıç.
-                  </Text>
-                  <List spacing={3} mb={8}>
-                    {["Maks. 20 Oda Yönetimi", "Temel Rezervasyon Takibi", "1 Yönetici Hesabı", "Standart E-posta Desteği"].map(
-                      (item) => (
-                        <ListItem key={item} display="flex" alignItems="center" gap={2}>
-                          <Icon as={Check} color="blue.500" boxSize={4} />
-                          <Text color="gray.600" fontSize="sm">{item}</Text>
-                        </ListItem>
-                      )
-                    )}
-                  </List>
-                </Box>
-                <Button size="lg" variant="outline" colorScheme="blue" borderRadius="full">
-                  14 Gün Dene
-                </Button>
-              </MotionVStack>
-
-              {/* Standart – highlighted */}
-              <MotionVStack
-                variants={fadeUp}
-                custom={1}
-                p={10}
-                bg="blue.600"
-                color="white"
-                borderRadius="3xl"
-                boxShadow="0 20px 60px rgba(43,108,176,0.45)"
-                align="stretch"
-                transform={{ md: "scale(1.05)" }}
-                position="relative"
-                justify="space-between"
-                zIndex={2}
-                _hover={{ boxShadow: "0 28px 80px rgba(43,108,176,0.55)", transform: { md: "scale(1.07)" } }}
-                transition="all 0.3s"
-              >
-                <Box>
-                  <Badge
-                    position="absolute"
-                    top="-4"
-                    left="50%"
-                    transform="translateX(-50%)"
-                    colorScheme="green"
-                    bg="green.400"
-                    color="white"
-                    px={4}
-                    py={1}
-                    borderRadius="full"
-                    fontSize="xs"
-                    fontWeight="bold"
-                  >
-                    EN POPÜLER
-                  </Badge>
-                  <Text fontWeight="bold" color="blue.200" letterSpacing="widest" fontSize="xs">
-                    STANDART
-                  </Text>
-                  <Heading size="2xl" my={4}>
-                    ₺3,990
-                    <Text as="span" fontSize="lg" color="blue.200">
-                      /ay
-                    </Text>
-                  </Heading>
-                  <Text color="blue.100" mb={6}>
-                    20-80 oda arası oteller için tüm premium özellikler.
-                  </Text>
-                  <List spacing={3} mb={8} color="white">
-                    {[
-                      "Maks. 80 Oda Yönetimi",
-                      "Kanban Check-in / Check-out",
-                      "5 Kullanıcıya Kadar",
-                      "Gelişmiş Dinamik İstatistik",
-                      "14 Saat Canlı Destek",
-                    ].map((item) => (
-                      <ListItem key={item} display="flex" alignItems="center" gap={2}>
-                        <Icon as={Check} color="green.300" boxSize={4} />
-                        <Text fontSize="sm">{item}</Text>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-                <Button
-                  size="lg"
-                  bg="white"
-                  color="blue.600"
-                  borderRadius="full"
-                  fontWeight="bold"
-                  _hover={{ bg: "blue.50" }}
-                  onClick={() => router.push("/register")}
+              {PRICING_PLANS.map((plan) => (
+                <MotionVStack
+                  key={plan.id}
+                  variants={fadeUp}
+                  custom={plan.delay}
+                  p={plan.isHighlighted ? 10 : 8}
+                  bg={plan.isHighlighted ? "blue.600" : "gray.50"}
+                  color={plan.isHighlighted ? "white" : "inherit"}
+                  borderRadius={plan.isHighlighted ? "3xl" : "2xl"}
+                  border={plan.isHighlighted ? "none" : "1px solid"}
+                  borderColor="gray.100"
+                  align="stretch"
+                  justify="space-between"
+                  boxShadow={plan.isHighlighted ? "0 20px 60px rgba(43,108,176,0.45)" : "sm"}
+                  transform={plan.isHighlighted ? { md: "scale(1.05)" } : undefined}
+                  position="relative"
+                  zIndex={plan.isHighlighted ? 2 : 1}
+                  _hover={{ 
+                    boxShadow: plan.isHighlighted ? "0 28px 80px rgba(43,108,176,0.55)" : "md", 
+                    transform: plan.isHighlighted ? { md: "scale(1.07)" } : "translateY(-4px)" 
+                  }}
+                  transition="all 0.3s"
                 >
-                  Hemen Başla
-                </Button>
-              </MotionVStack>
-
-              {/* Premium */}
-              <MotionVStack
-                variants={fadeUp}
-                custom={2}
-                p={8}
-                bg="gray.50"
-                borderRadius="2xl"
-                border="1px solid"
-                borderColor="gray.100"
-                align="stretch"
-                justify="space-between"
-                _hover={{ boxShadow: "md", transform: "translateY(-4px)" }}
-                transition="all 0.3s"
-              >
-                <Box>
-                  <Text fontWeight="bold" color="gray.500" letterSpacing="widest" fontSize="xs">
-                    PREMİUM
-                  </Text>
-                  <Heading size="2xl" my={4}>
-                    ₺8,990
-                    <Text as="span" fontSize="lg" color="gray.500">
-                      /ay
+                  <Box>
+                    {plan.badge && (
+                      <Badge
+                        position="absolute"
+                        top="-4"
+                        left="50%"
+                        transform="translateX(-50%)"
+                        colorScheme="green"
+                        bg="green.400"
+                        color="white"
+                        px={4}
+                        py={1}
+                        borderRadius="full"
+                        fontSize="xs"
+                        fontWeight="bold"
+                      >
+                        {plan.badge}
+                      </Badge>
+                    )}
+                    <Text 
+                      fontWeight="bold" 
+                      color={plan.isHighlighted ? "blue.200" : "gray.500"} 
+                      letterSpacing="widest" 
+                      fontSize="xs"
+                    >
+                      {plan.name}
                     </Text>
-                  </Heading>
-                  <Text color="gray.500" mb={6}>
-                    80+ odaya sahip büyük oteller ve zincirler için sınırsız erişim.
-                  </Text>
-                  <List spacing={3} mb={8}>
-                    {[
-                      "Sınırsız Oda Kapasitesi",
-                      "Sınırsız Kullanıcı ve Alt Roller",
-                      "Temizlik Görevlisi Arayüzü",
-                      "Çoklu-Şube (Tenant) Desteği",
-                      "7/24 VIP Müşteri Temsilcisi",
-                    ].map((item) => (
-                      <ListItem key={item} display="flex" alignItems="center" gap={2}>
-                        <Icon as={Check} color="blue.500" boxSize={4} />
-                        <Text color="gray.600" fontSize="sm">{item}</Text>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-                <Button size="lg" variant="outline" colorScheme="blue" borderRadius="full">
-                  Müşteri Temsilcisine Ulaş
-                </Button>
-              </MotionVStack>
+                    <Heading size="2xl" my={4}>
+                      ₺{plan.price}
+                      <Text as="span" fontSize="lg" color={plan.isHighlighted ? "blue.200" : "gray.500"}>
+                        /ay
+                      </Text>
+                    </Heading>
+                    <Text color={plan.isHighlighted ? "blue.100" : "gray.500"} mb={6}>
+                      {plan.description}
+                    </Text>
+                    <List spacing={3} mb={8} color={plan.isHighlighted ? "white" : "inherit"}>
+                      {plan.features.map((item) => (
+                        <ListItem key={item} display="flex" alignItems="center" gap={2}>
+                          <Icon as={Check} color={plan.isHighlighted ? "green.300" : "blue.500"} boxSize={4} />
+                          <Text color={plan.isHighlighted ? "white" : "gray.600"} fontSize="sm">{item}</Text>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                  <Button
+                    size="lg"
+                    variant={plan.isHighlighted ? "solid" : "outline"}
+                    bg={plan.isHighlighted ? "white" : "transparent"}
+                    color={plan.isHighlighted ? "blue.600" : plan.colorScheme + ".500"}
+                    colorScheme={plan.isHighlighted ? undefined : plan.colorScheme}
+                    borderRadius="full"
+                    fontWeight={plan.isHighlighted ? "bold" : "normal"}
+                    _hover={plan.isHighlighted ? { bg: "blue.50" } : { bg: plan.colorScheme + ".50" }}
+                    onClick={() => plan.id === "standart" ? router.push("/register") : undefined}
+                  >
+                    {plan.buttonText}
+                  </Button>
+                </MotionVStack>
+              ))}
             </SimpleGrid>
           </RevealSection>
         </Container>

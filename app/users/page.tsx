@@ -10,6 +10,10 @@ import {
     useDisclosure,
     useToast,
     Badge,
+    Select,
+    FormControl,
+    FormLabel,
+    HStack,
 } from "@chakra-ui/react";
 
 import {
@@ -20,6 +24,7 @@ import {
     addUser,
     updateUser,
 } from "@/services/userService";
+import { getHotelsByOwner } from "@/services/hotelService";
 import { CustomButton } from "@/components";
 import DynamicTable from "@/components/common/DynamicTable";
 import StatCard from "@/components/common/StatCard";
@@ -31,34 +36,59 @@ export default function UsersPage() {
     const { user } = useAuth();
     const [stats, setStats] = useState<any>(null);
     const [users, setUsers] = useState<User[]>([]);
+    const [hotels, setHotels] = useState<any[]>([]);
+    const [selectedHotelId, setSelectedHotelId] = useState<string>("");
     const [loading, setLoading] = useState(true);
+    const [statsLoading, setStatsLoading] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [form, setForm] = useState(INITIAL_FORM_STATE);
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [mode, setMode] = useState<"add" | "edit">("add");
 
+    // 🔹 Otelleri Yükle
+    useEffect(() => {
+        const fetchHotels = async () => {
+            if (user?.uid) {
+                const ownerHotels = await getHotelsByOwner(user.uid);
+                setHotels(ownerHotels);
+                if (ownerHotels.length > 0 && !selectedHotelId) {
+                    setSelectedHotelId(ownerHotels[0].id);
+                }
+            }
+        };
+        fetchHotels();
+    }, [user]);
+
     const loadUsers = async () => {
-        const hotelId = user?.hotelIds?.[0];
-        const data = await getUsersList(hotelId);
+        if (!selectedHotelId) return;
+        const data = await getUsersList(selectedHotelId);
         setUsers(data);
+    };
+
+    const fetchStats = async () => {
+        if (!selectedHotelId) return;
+        setStatsLoading(true);
+        try {
+            const userStats = await getUsersStats(selectedHotelId);
+            setStats(userStats);
+        } finally {
+            setStatsLoading(false);
+        }
     };
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!user?.hotelIds || user.hotelIds.length === 0) {
-                setLoading(false);
+            if (!selectedHotelId) {
+                if (!user?.hotelIds || user.hotelIds.length === 0) {
+                    setLoading(false);
+                }
                 return;
             }
 
             try {
-                const hotelId = user.hotelIds?.[0];
-                if (hotelId) {
-                    const userStats = await getUsersStats(hotelId);
-                    setStats(userStats);
-                    const usersData = await getUsersList(hotelId);
-                    setUsers(usersData);
-                }
+                setLoading(true);
+                await Promise.all([fetchStats(), loadUsers()]);
             } catch (error) {
                 console.error("Kullanıcı verileri alınamadı:", error);
             } finally {
@@ -66,25 +96,21 @@ export default function UsersPage() {
             }
         };
         fetchData();
-    }, [user]);
+    }, [selectedHotelId, user]);
 
     const refreshUsers = async () => {
-        const hotelId = user?.hotelIds?.[0];
-        const list = await getUsersList(hotelId);
-        setUsers(list);
+        await Promise.all([fetchStats(), loadUsers()]);
     };
 
     // 🔹 Yeni kullanıcı ekle
     const handleAddUser = async () => {
-        if (!user || !user.hotelIds || user.hotelIds.length === 0) {
-            toast({ title: "Otel bilgisi bulunamadı", status: "error" });
+        if (!selectedHotelId || !user) {
+            toast({ title: "Otel bilgisi seçilmedi", status: "error" });
             return;
         }
 
         try {
-            const hotelId = user.hotelIds[0];
-            if (!hotelId) throw new Error("Otel ID bulunamadı");
-            await addUser(form.name, form.email, form.password, form.team, form.title, hotelId, { uid: user.uid, name: user.name });
+            await addUser(form.name, form.email, form.password, form.team, form.title, selectedHotelId, { uid: user.uid, name: user.name });
             toast({ title: "Kullanıcı eklendi", status: "success" });
             refreshUsers();
             onClose();
@@ -97,16 +123,16 @@ export default function UsersPage() {
         }
     };
 
-    // 🔹 Kullanıcı güncelle (Sadece Firestore)
+    // 🔹 Kullanıcı güncelle
     const handleUpdateUser = async () => {
-        if (!selectedUser?.id || !user) return;
+        if (!selectedUser?.id || !user || !selectedHotelId) return;
 
         try {
             await updateUser(selectedUser.id, {
                 name: form.name,
                 team: form.team,
                 title: form.title,
-                hotelIds: [form.hotel],
+                hotelIds: [selectedHotelId], // Mevcut seçili otele bağlı kal
             }, { uid: user.uid, name: user.name });
 
             toast({ title: "Kullanıcı bilgileri güncellendi", status: "info" });
@@ -122,13 +148,11 @@ export default function UsersPage() {
     };
 
     const handleDeleteUser = async (userId: string) => {
-        if (!user) return;
+        if (!user || !selectedHotelId) return;
         if (confirm("Bu kullanıcıyı silmek istediğine emin misin?")) {
             try {
-                const hotelId = user.hotelIds?.[0];
-                if (!hotelId) return;
-                await deleteUserFromFirestore(userId, hotelId, { uid: user.uid, name: user.name });
-                await loadUsers();
+                await deleteUserFromFirestore(userId, selectedHotelId, { uid: user.uid, name: user.name });
+                await refreshUsers();
                 toast({ title: "Kullanıcı silindi", status: "success" });
             } catch (err) {
                 console.error("Kullanıcı silinirken hata:", err);
@@ -144,7 +168,7 @@ export default function UsersPage() {
             password: "",
             team: user.team || "reception",
             title: user.title || "",
-            hotel: user.hotelIds?.[0] || "",
+            hotel: selectedHotelId,
         });
         setMode("edit");
         onOpen();
@@ -157,10 +181,9 @@ export default function UsersPage() {
         onOpen();
     };
 
-    if (loading) return <Spinner size="lg" color="blue.500" />;
+    if (loading && !selectedHotelId) return <Spinner size="lg" color="blue.500" />;
 
     const statsArray = getStatsArray(stats);
-
     const cardCount = statsArray.length;
     let variant: 'normal' | 'compact' | 'veryCompact' = 'normal';
     if (cardCount > 5) variant = 'veryCompact';
@@ -168,7 +191,7 @@ export default function UsersPage() {
 
     return (
         <Box minH="90vh" display="flex" flexDirection="column" p={6}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" w="full" mb={6}>
+            <Box display="flex" justifyContent="space-between" alignItems="flex-end" w="full" mb={8}>
                 <Box>
                     <Text fontSize="2xl" fontWeight="semibold" color="neutral.800">
                         Kullanıcı Yönetimi
@@ -177,29 +200,52 @@ export default function UsersPage() {
                         Çalışanların bilgilerini görüntüleyin ve yönetin.
                     </Text>
                 </Box>
-                <CustomButton bg="brand.500" color="white" _hover={{ bg: "brand.600" }} onClick={openAddModal}>
-                    Yeni Kullanıcı Ekle
-                </CustomButton>
+                
+                <HStack spacing={4} align="flex-end">
+                    {hotels.length > 1 && (
+                        <FormControl w="300px">
+                            <FormLabel fontSize="xs" fontWeight="bold" color="neutral.500" mb={1}>YÖNETİLEN İŞLETME</FormLabel>
+                            <Select 
+                                value={selectedHotelId} 
+                                onChange={(e) => setSelectedHotelId(e.target.value)}
+                                borderRadius="lg"
+                                bg="white"
+                                boxShadow="sm"
+                                fontWeight="medium"
+                            >
+                                {hotels.map(h => (
+                                    <option key={h.id} value={h.id}>{h.name}</option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    )}
+                    <CustomButton bg="brand.500" color="white" _hover={{ bg: "brand.600" }} onClick={openAddModal} h="40px">
+                        Yeni Kullanıcı Ekle
+                    </CustomButton>
+                </HStack>
             </Box>
 
             {/* İstatistikler */}
-            <SimpleGrid
-                minChildWidth={960 / cardCount}
-                spacing={4}
-                mb={6}
-            >
-                {statsArray.map((stat) => (
-                    <StatCard
-                        key={stat.title}
-                        title={stat.title}
-                        value={stat.count.toString()}
-                        subValue="Personel"
-                        icon={stat.icon}
-                        colorScheme={stat.color}
-                        variant={variant}
-                    />
-                ))}
-            </SimpleGrid>
+            <Box position="relative">
+                {statsLoading && <Box position="absolute" top={0} right={0} zIndex={1}><Spinner size="xs" /></Box>}
+                <SimpleGrid
+                    minChildWidth={statsArray.length > 0 ? (960 / cardCount) : "200px"}
+                    spacing={4}
+                    mb={6}
+                >
+                    {statsArray.map((stat) => (
+                        <StatCard
+                            key={stat.title}
+                            title={stat.title}
+                            value={stat.count.toString()}
+                            subValue="Personel"
+                            icon={stat.icon}
+                            colorScheme={stat.color}
+                            variant={variant}
+                        />
+                    ))}
+                </SimpleGrid>
+            </Box>
 
             {/* Tablo */}
             <Card borderRadius="xl"
@@ -217,7 +263,7 @@ export default function UsersPage() {
                         },
                         {
                             header: "Ekip",
-                            render: (u) => (
+                            render: (u: any) => (
                                 <Badge colorScheme="purple" variant="subtle" borderRadius="full" px={2} textTransform="capitalize">
                                     {u.team}
                                 </Badge>
@@ -226,7 +272,7 @@ export default function UsersPage() {
                         { header: "Mail", accessor: "email" },
                         {
                             header: "İşlemler",
-                            render: (user) => (
+                            render: (u: any) => (
                                 <Box display="flex" gap={2}>
                                     <CustomButton
                                         variant="outline"
@@ -234,7 +280,7 @@ export default function UsersPage() {
                                         color="brand.500"
                                         size="sm"
                                         _hover={{ bg: "brand.50" }}
-                                        onClick={() => openEditModal(user)}
+                                        onClick={() => openEditModal(u)}
                                     >
                                         Güncelle
                                     </CustomButton>
@@ -244,7 +290,7 @@ export default function UsersPage() {
                                         color="red.500"
                                         size="sm"
                                         _hover={{ bg: "red.50" }}
-                                        onClick={() => user.id && handleDeleteUser(user.id)}
+                                        onClick={() => u.id && handleDeleteUser(u.id)}
                                     >
                                         Sil
                                     </CustomButton>
@@ -255,7 +301,6 @@ export default function UsersPage() {
                     data={users}
                 />
             </Card>
-
 
             {/* Kullanıcı Ekle / Güncelle Modal */}
             <UserModal

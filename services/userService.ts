@@ -199,3 +199,16 @@ export async function findUserByEmail(email: string): Promise<User | null> {
     }
     return null;
 }
+// 🔹 Abonelik planını güncelle
+export async function updateSubscriptionPlan(uid: string, newPlan: string) {
+    try {
+        const userRef = doc(db, "users", uid);
+        await updateDoc(userRef, {
+            subscriptionPlan: newPlan
+        });
+        return true;
+    } catch (error) {
+        console.error("Abonelik planı güncellenirken hata:", error);
+        throw error;
+    }
+}

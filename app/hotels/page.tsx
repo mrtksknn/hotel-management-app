@@ -4,15 +4,17 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import {
-  Box, Heading, Text, Table, Thead, Tbody, Tr, Th, Td, 
-  Button, IconButton, HStack, VStack, useDisclosure, Modal, 
-  ModalOverlay, ModalContent, ModalHeader, ModalFooter, 
-  ModalBody, ModalCloseButton, FormControl, FormLabel, 
+  Box, Heading, Text, Table, Thead, Tbody, Tr, Th, Td,
+  Button, IconButton, HStack, VStack, useDisclosure, Modal,
+  ModalOverlay, ModalContent, ModalHeader, ModalFooter,
+  ModalBody, ModalCloseButton, FormControl, FormLabel,
   Input, useToast, Spinner, Flex, Badge, Icon
 } from "@chakra-ui/react";
-import { Edit2, Plus, Hotel as HotelIcon, MapPin, Users, BedDouble } from "lucide-react";
+import { Edit2, Plus, Hotel as HotelIcon, MapPin, Users, BedDouble, Star } from "lucide-react";
 import { getHotelsByOwner, getHotelStats, updateHotelData, createHotel, canAddMoreHotels } from "@/services/hotelService";
 import { Hotel } from "@/types/hotel";
+import SubscriptionModal from "./SubscriptionModal";
+import HotelModal from "./HotelModal";
 
 interface HotelWithStats extends Hotel {
   employeeCount: number;
@@ -20,14 +22,20 @@ interface HotelWithStats extends Hotel {
 }
 
 export default function HotelsPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const router = useRouter();
   const toast = useToast();
   const [hotels, setHotels] = useState<HotelWithStats[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modal states
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isSubOpen,
+    onOpen: onSubOpen,
+    onClose: onSubClose
+  } = useDisclosure();
+
   const [isEdit, setIsEdit] = useState(false);
   const [currentHotel, setCurrentHotel] = useState<Partial<HotelWithStats> | null>(null);
   const [formData, setFormData] = useState({ name: "", location: "" });
@@ -73,11 +81,26 @@ export default function HotelsPage() {
     if (!canAddMoreHotels(user as any)) {
       toast({
         title: "Limit Aşıldı",
-        description: `Mevcut paketiniz (${user?.subscriptionPlan}) ile daha fazla otel ekleyemezsiniz. Lütfen Butik planınızı yükseltin.`,
+        description: `Mevcut paketiniz (${user?.subscriptionPlan}) ile daha fazla otel ekleyemezsiniz.`,
         status: "warning",
-        duration: 5000,
+        duration: 10000,
         isClosable: true,
         position: "top",
+        render: ({ onClose }) => (
+          <Box color="white" p={4} bg="orange.500" borderRadius="xl" boxShadow="lg">
+            <VStack align="start" spacing={3}>
+              <HStack>
+                <Icon as={Star} />
+                <Text fontWeight="bold">Limit Aşıldı</Text>
+              </HStack>
+              <Text fontSize="sm">Mevcut paketiniz ({user?.subscriptionPlan}) ile daha fazla otel ekleyemezsiniz.</Text>
+              <HStack w="full" justify="flex-end">
+                <Button size="sm" variant="plain" color="white" onClick={onClose}>Kapat</Button>
+                <Button size="sm" bg="white" variant="outline" color="orange.600" onClick={() => { onSubOpen(); onClose(); }}>Planı Yükselt</Button>
+              </HStack>
+            </VStack>
+          </Box>
+        )
       });
       return;
     }
@@ -130,20 +153,36 @@ export default function HotelsPage() {
     <Box p={8} bg="gray.50" minH="100vh">
       <Flex justify="space-between" align="center" mb={8}>
         <Box>
-          <Heading size="lg" color="gray.800">Otellerim</Heading>
+          <HStack mb={1}>
+            <Heading size="lg" color="gray.800">Otellerim</Heading>
+            <Badge colorScheme="brand" variant="solid" borderRadius="full" px={3} textTransform="uppercase" fontSize="10px">
+              {user?.subscriptionPlan} PLAN
+            </Badge>
+          </HStack>
           <Text color="gray.500" fontSize="sm">Sahibi olduğunuz tüm tesisleri buradan yönetebilirsiniz.</Text>
         </Box>
-        <Button 
-          leftIcon={<Plus size={18} />} 
-          colorScheme="brand" 
-          onClick={handleOpenAdd}
-          bg="brand.600"
-          _hover={{ bg: "brand.700" }}
-          borderRadius="full"
-          px={6}
-        >
-          Yeni Otel Ekle
-        </Button>
+        <HStack spacing={4}>
+          <Button
+            variant="ghost"
+            leftIcon={<Star size={18} />}
+            onClick={onSubOpen}
+            colorScheme="brand"
+            borderRadius="full"
+          >
+            Planı Yönet
+          </Button>
+          <Button
+            leftIcon={<Plus size={18} />}
+            colorScheme="brand"
+            onClick={handleOpenAdd}
+            bg="brand.600"
+            _hover={{ bg: "brand.700" }}
+            borderRadius="full"
+            px={6}
+          >
+            Yeni Otel Ekle
+          </Button>
+        </HStack>
       </Flex>
 
       <Box bg="white" p={0} borderRadius="2xl" boxShadow="sm" overflow="hidden" border="1px solid" borderColor="gray.100">
@@ -207,49 +246,24 @@ export default function HotelsPage() {
       </Box>
 
       {/* Add/Edit Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay backdropFilter="blur(5px)" bg="blackAlpha.300" />
-        <ModalContent borderRadius="2xl" boxShadow="xl">
-          <ModalHeader color="gray.800">{isEdit ? "Oteli Düzenle" : "Yeni Otel Ekle"}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel fontSize="sm" color="gray.600">Otel Adı</FormLabel>
-                <Input 
-                  placeholder="Ör: Grand Resort" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  borderRadius="xl"
-                />
-              </FormControl>
-              <FormControl isRequired>
-                <FormLabel fontSize="sm" color="gray.600">Lokasyon (Şehir, Ülke)</FormLabel>
-                <Input 
-                  placeholder="Ör: Antalya, Türkiye" 
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  borderRadius="xl"
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-          <ModalFooter borderTop="1px solid" borderColor="gray.100">
-            <Button variant="ghost" mr={3} onClick={onClose} borderRadius="full">İptal</Button>
-            <Button 
-              colorScheme="brand" 
-              bg="brand.600" 
-              _hover={{ bg: "brand.700" }} 
-              onClick={handleSave}
-              isLoading={saving}
-              borderRadius="full"
-              px={8}
-            >
-              Kaydet
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <HotelModal
+        isOpen={isOpen}
+        onClose={onClose}
+        isEdit={isEdit}
+        formData={formData}
+        setFormData={setFormData}
+        onSave={handleSave}
+        isLoading={saving}
+      />
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        isOpen={isSubOpen}
+        onClose={onSubClose}
+        currentPlan={user?.subscriptionPlan || "Butik"}
+        userId={user?.uid || ""}
+        onPlanUpdated={refreshUser}
+      />
     </Box>
   );
 }

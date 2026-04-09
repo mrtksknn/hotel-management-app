@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,8 +50,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   };
 
+  const refreshUser = async () => {
+    if (!user?.email) return;
+    try {
+      const updatedUser = await findUserByEmail(user.email);
+      if (updatedUser) {
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error("Kullanıcı yenilenirken hata:", error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
